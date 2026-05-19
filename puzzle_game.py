@@ -2,14 +2,15 @@
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
 from genlayer import *
+import json
 
 class GenLayerRiddleChallenge(gl.Contract):
-    scores: TreeMap[str, u256]
-    attempts: TreeMap[str, u256]
+    scores:   str
+    attempts: str
 
     def __init__(self):
-        self.scores = TreeMap()
-        self.attempts = TreeMap()
+        self.scores   = "{}"
+        self.attempts = "{}"
 
     @gl.public.view
     def get_riddle(self, index: u256) -> str:
@@ -27,9 +28,27 @@ class GenLayerRiddleChallenge(gl.Contract):
 
     @gl.public.view
     def get_score(self, player: str) -> str:
-        score = self.scores[player] if player in self.scores else u256(0)
-        attempts = self.attempts[player] if player in self.attempts else u256(0)
-        return "Player: " + player + " | Score: " + str(score) + "/5 | Attempts: " + str(attempts)
+        scores   = json.loads(self.scores)
+        attempts = json.loads(self.attempts)
+        score    = scores.get(player, 0)
+        attempt  = attempts.get(player, 0)
+        return "Player: " + player + " | Score: " + str(score) + "/5 | Attempts: " + str(attempt)
+
+    @gl.public.view
+    def get_all_scores(self) -> str:
+        scores   = json.loads(self.scores)
+        attempts = json.loads(self.attempts)
+        if not scores:
+            return "No players yet. Be the first to solve a riddle!"
+        leaderboard = []
+        for player, score in scores.items():
+            leaderboard.append({
+                "player":   player,
+                "score":    score,
+                "attempts": attempts.get(player, 0)
+            })
+        leaderboard.sort(key=lambda x: x["score"], reverse=True)
+        return json.dumps(leaderboard, sort_keys=True)
 
     @gl.public.write
     def submit_answer(self, player: str, riddle_index: u256, player_answer: str) -> str:
@@ -43,10 +62,14 @@ class GenLayerRiddleChallenge(gl.Contract):
         i = int(riddle_index)
         if i >= len(answers):
             return "Invalid riddle number. Pick between 0 and 4."
+
         correct_answer = answers[i]
-        if player not in self.attempts:
-            self.attempts[player] = u256(0)
-        self.attempts[player] = self.attempts[player] + u256(1)
+
+        # Track attempt — persists correctly using str + JSON
+        attempts         = json.loads(self.attempts)
+        attempts[player] = attempts.get(player, 0) + 1
+        self.attempts    = json.dumps(attempts, sort_keys=True)
+
         prompt = f"""
         You are the judge of a GenLayer blockchain riddle game.
         The correct answer to the riddle is: "{correct_answer}"
@@ -55,18 +78,22 @@ class GenLayerRiddleChallenge(gl.Contract):
         the player clearly understands the concept even if worded differently.
         Reply with only YES or NO.
         """
+
         def get_verdict():
             result = gl.nondet.exec_prompt(prompt)
             return result
+
         verdict = gl.eq_principle.prompt_comparative(
             get_verdict, "The verdict must be YES or NO"
         )
+
         if "YES" in verdict.upper():
-            if player not in self.scores:
-                self.scores[player] = u256(0)
-            self.scores[player] = self.scores[player] + u256(1)
-            current_score = self.scores[player]
-            if current_score == u256(5):
+            # Update score — persists correctly using str + JSON
+            scores         = json.loads(self.scores)
+            scores[player] = scores.get(player, 0) + 1
+            self.scores    = json.dumps(scores, sort_keys=True)
+            current_score  = scores[player]
+            if current_score == 5:
                 return "LEGENDARY! You solved all 5 GenLayer riddles! Hall of Fame unlocked!"
             return "Correct! Your GenLayer knowledge is real. Score: " + str(current_score) + "/5"
         else:
