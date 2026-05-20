@@ -804,21 +804,25 @@ async function submitSolo(){
 }
 
 // ── ROOM CREATE ──
-async function createRoom(){
-  const w = getPlayer();
-  const tx  = document.getElementById('createTx');
-  const btn = document.getElementById('createBtn');
-  tx.className='tx-status pbox pending'; btn.disabled=true;
-  await glWrite('create_room',[w]);
-  setTimeout(()=>{
-    tx.className='tx-status pbox';
-    const code=genCode(w); roomCode=code;
-    document.getElementById('displayCode').textContent=code;
-    document.getElementById('createdSection').style.display='block';
-    document.getElementById('createdPlayers').innerHTML=`
-      <div class="player-row"><div class="p-dot"></div><div class="p-addr">${w.slice(0,10)}...${w.slice(-6)}</div>
-      <div class="badge host">HOST</div><div class="badge you">YOU</div></div>`;
-  },2000);
+function createRoom(){
+  try {
+    const w    = getPlayer();
+    const code = genCode(w);
+    roomCode   = code;
+    document.getElementById('displayCode').textContent = code;
+    document.getElementById('createdSection').style.display = 'block';
+    document.getElementById('createBtn').style.display = 'none';
+    document.getElementById('createdPlayers').innerHTML = `
+      <div class="player-row">
+        <div class="p-dot"></div>
+        <div class="p-addr">${w.slice(0,10)}...${w.slice(-6)}</div>
+        <div class="badge host">HOST</div>
+        <div class="badge you">YOU</div>
+      </div>`;
+    glWrite('create_room', [w]);
+  } catch(e) {
+    console.error('createRoom error:', e);
+  }
 }
 
 function copyCode(){
@@ -828,20 +832,18 @@ function copyCode(){
 }
 
 // ── ROOM JOIN ──
-async function joinRoom(){
-  const w=getPlayer();
-  const c=document.getElementById('joinCode').value.trim().toUpperCase();
-  if(!c){alert('Enter the room code.');return;}
-  roomCode=c;
-  const tx=document.getElementById('joinTx');
-  tx.className='tx-status pbox pending';
-  await glWrite('join_room',[w,c]);
-  setTimeout(()=>{
-    tx.className='tx-status pbox';
-    document.getElementById('joinedSection').style.display='block';
-    const msg=document.getElementById('joinedMsg');
-    msg.innerHTML='<div class="fb-title">✓ JOINED ROOM '+c+'</div><div class="fb-text">READY TO PLAY!</div>';
-  },2000);
+function joinRoom(){
+  const c = document.getElementById('joinCode').value.trim().toUpperCase();
+  if(!c){ alert('ENTER THE ROOM CODE.'); return; }
+  roomCode = c;
+  try {
+    const w = getPlayer();
+    glWrite('join_room', [w, c]);
+    document.getElementById('joinedSection').style.display = 'block';
+    document.getElementById('joinedMsg').innerHTML =
+      '<div class="fb-title">✓ JOINED ROOM ' + c + '</div>' +
+      '<div class="fb-text">READY TO PLAY!</div>';
+  } catch(e) { console.error(e); }
 }
 
 function goPlay(){
