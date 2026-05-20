@@ -806,13 +806,13 @@ async function submitSolo(){
 // ── ROOM CREATE ──
 async function createRoom(){
   const w = getPlayer();
-  roomCode = genCode(w);
-  const btn=document.getElementById('createBtn');
-  tx.className='tx-status pbox pending';btn.disabled=true;
+  const tx  = document.getElementById('createTx');
+  const btn = document.getElementById('createBtn');
+  tx.className='tx-status pbox pending'; btn.disabled=true;
   await glWrite('create_room',[w]);
   setTimeout(()=>{
     tx.className='tx-status pbox';
-    const code=genCode(w);roomCode=code;
+    const code=genCode(w); roomCode=code;
     document.getElementById('displayCode').textContent=code;
     document.getElementById('createdSection').style.display='block';
     document.getElementById('createdPlayers').innerHTML=`
