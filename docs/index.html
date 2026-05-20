@@ -2,680 +2,413 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RIDDLE CHAIN — GenLayer</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
+<title>RiddleChain — GenLayer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:      #0a0a0f;
-  --bg2:     #111122;
-  --bg3:     #0d0d1a;
-  --purple:  #6c2bd9;
-  --p-light: #a855f7;
-  --p-glow:  rgba(168,85,247,0.4);
-  --green:   #22c55e;
-  --g-glow:  rgba(34,197,94,0.4);
-  --yellow:  #facc15;
-  --red:     #ef4444;
-  --cyan:    #22d3ee;
-  --white:   #e2e2ff;
-  --dim:     #555577;
-  --pixel:   'Press Start 2P', monospace;
-  --vt:      'VT323', monospace;
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;overflow-x:hidden;}
+body{
+  background:#0a0a0f;
+  color:#e2e2ff;
+  font-family:'Press Start 2P',monospace;
+  font-size:10px;
+  min-height:100vh;
+  line-height:1.8;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; image-rendering:pixelated; }
-html { scroll-behavior:smooth; }
-
-body {
-  background: var(--bg);
-  color: var(--white);
-  font-family: var(--pixel);
-  font-size: 10px;
-  line-height: 1.8;
-  min-height: 100vh;
-  overflow-x: hidden;
-  cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><rect width='2' height='2' fill='%23a855f7'/><rect x='2' y='2' width='2' height='2' fill='%23a855f7'/><rect x='4' y='4' width='2' height='2' fill='%23a855f7'/><rect x='6' y='6' width='8' height='2' fill='%23a855f7'/><rect x='6' y='8' width='2' height='8' fill='%23a855f7'/></svg>") 0 0, auto;
-}
-
-/* PIXEL GRID BG */
-body::before {
+/* GRID BG */
+body::before{
   content:'';
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background-image:
-    linear-gradient(rgba(108,43,217,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(108,43,217,0.03) 1px, transparent 1px);
-  background-size: 16px 16px;
-  pointer-events:none;
-  z-index:0;
+    linear-gradient(rgba(108,43,217,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(108,43,217,0.04) 1px,transparent 1px);
+  background-size:16px 16px;
+  pointer-events:none;z-index:0;
 }
 
-/* SCANLINES */
-body::after {
-  content:'';
-  position:fixed;
-  inset:0;
-  background:repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    rgba(0,0,0,0.15) 3px,
-    rgba(0,0,0,0.15) 4px
-  );
-  pointer-events:none;
-  z-index:9999;
-}
-
-::-webkit-scrollbar { width:8px; }
-::-webkit-scrollbar-track { background:var(--bg2); }
-::-webkit-scrollbar-thumb { background:var(--purple); }
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:#111;}
+::-webkit-scrollbar-thumb{background:#6c2bd9;}
 
 /* ── PIXEL BOX ── */
-.px-box {
-  background: var(--bg2);
-  border: 4px solid var(--purple);
-  box-shadow:
-    4px 4px 0 0 #000,
-    inset -2px -2px 0 rgba(0,0,0,0.5),
-    inset 2px 2px 0 rgba(255,255,255,0.05);
-  position: relative;
-}
-.px-box::before {
-  content:'';
-  position:absolute;
-  top:-4px;left:-4px;right:-4px;bottom:-4px;
-  border:2px solid #000;
-  pointer-events:none;
-}
-.px-box.green-border { border-color:var(--green); box-shadow:4px 4px 0 0 #000, 0 0 16px var(--g-glow); }
-.px-box.red-border   { border-color:var(--red);   box-shadow:4px 4px 0 0 #000; }
-.px-box.yellow-border{ border-color:var(--yellow); box-shadow:4px 4px 0 0 #000; }
-.px-box.cyan-border  { border-color:var(--cyan);   box-shadow:4px 4px 0 0 #000; }
-
-/* ── PIXEL BUTTON ── */
-.px-btn {
-  font-family: var(--pixel);
-  font-size: 8px;
-  padding: 12px 20px;
-  border: 3px solid var(--p-light);
-  background: var(--purple);
-  color: #fff;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  box-shadow: 4px 4px 0 0 #000;
-  transition: transform 0.1s, box-shadow 0.1s;
+.pbox{
+  background:#111122;
+  border:3px solid #6c2bd9;
+  box-shadow:4px 4px 0 #000;
   position:relative;
-  display:inline-block;
 }
-.px-btn::after {
-  content:'';
-  position:absolute;
-  inset:0;
-  border-top: 2px solid rgba(255,255,255,0.2);
-  border-left: 2px solid rgba(255,255,255,0.2);
-  pointer-events:none;
-}
-.px-btn:hover { background:#7c3aed; box-shadow:6px 6px 0 0 #000; transform:translate(-1px,-1px); }
-.px-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 0 #000; }
-.px-btn.green { background:var(--green); border-color:#86efac; box-shadow:4px 4px 0 0 #000; }
-.px-btn.green:hover { background:#16a34a; }
-.px-btn.outline { background:transparent; color:var(--p-light); }
-.px-btn.outline:hover { background:rgba(108,43,217,0.2); }
-.px-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
-.px-btn.full { width:100%; text-align:center; display:block; }
+.pbox.green{border-color:#22c55e;box-shadow:4px 4px 0 #000;}
+.pbox.yellow{border-color:#facc15;box-shadow:4px 4px 0 #000;}
+.pbox.cyan{border-color:#22d3ee;box-shadow:4px 4px 0 #000;}
+.pbox.red{border-color:#ef4444;box-shadow:4px 4px 0 #000;}
 
 /* ── NAV ── */
-nav {
-  position:fixed;top:0;left:0;right:0;
-  z-index:100;
-  height:56px;
-  background:var(--bg);
-  border-bottom:4px solid var(--purple);
-  box-shadow:0 4px 0 0 #000;
+nav{
+  position:sticky;top:0;
+  background:#0a0a0f;
+  border-bottom:3px solid #6c2bd9;
+  box-shadow:0 3px 0 #000;
+  height:52px;
   display:flex;align-items:center;
-  padding:0 16px;
-  gap:12px;
+  padding:0 12px;gap:8px;
+  z-index:1000;
+  width:100%;
 }
-.nav-logo {
-  font-family:var(--pixel);
-  font-size:11px;
-  color:var(--yellow);
-  text-shadow:2px 2px 0 #000, 0 0 12px var(--yellow);
+.nav-logo{
+  font-size:clamp(8px,3vw,12px);
+  color:#facc15;
+  text-shadow:2px 2px 0 #000;
   cursor:pointer;
-  letter-spacing:0.05em;
   white-space:nowrap;
+  flex-shrink:0;
 }
-.nav-logo span { color:var(--p-light); }
-.nav-space { flex:1; }
-.nav-lives {
-  font-family:var(--pixel);
-  font-size:8px;
-  color:var(--red);
-  display:none;
-}
-#walletBtn {
-  font-family:var(--pixel);
-  font-size:7px;
-  padding:8px 12px;
-  border:2px solid var(--p-light);
-  background:var(--bg2);
-  color:var(--p-light);
+.nav-logo span{color:#a855f7;}
+.nav-sp{flex:1;}
+#walletBtn{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(6px,2vw,8px);
+  padding:6px 10px;
+  border:2px solid #a855f7;
+  background:#0d0d1a;
+  color:#a855f7;
   cursor:pointer;
-  box-shadow:3px 3px 0 #000;
-  transition:all 0.1s;
+  box-shadow:2px 2px 0 #000;
   white-space:nowrap;
+  flex-shrink:0;
 }
-#walletBtn:hover { background:var(--purple); color:#fff; }
-#walletBtn.connected { border-color:var(--green); color:var(--green); }
+#walletBtn.connected{border-color:#22c55e;color:#22c55e;}
+#walletBtn:active{transform:translate(2px,2px);box-shadow:none;}
 
 /* ── VIEWS ── */
-.view { display:none; padding-top:56px; min-height:100vh; position:relative; z-index:2; }
-.view.active { display:block; }
+.view{display:none;position:relative;z-index:1;}
+.view.active{display:block;}
 
-/* ══════════════════════════════
-   HOME
-══════════════════════════════ */
-.home-wrap {
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:32px 16px;
-  gap:32px;
-}
-
-/* TITLE CARD */
-.title-card {
-  text-align:center;
-  padding:24px 32px;
-  width:100%;
+/* ── PAGE WRAP ── */
+.page{
   max-width:600px;
-}
-.title-badge {
-  font-family:var(--pixel);
-  font-size:7px;
-  color:var(--cyan);
-  letter-spacing:0.2em;
-  margin-bottom:16px;
-  text-shadow:1px 1px 0 #000;
-}
-.big-title {
-  font-family:var(--pixel);
-  font-size:clamp(18px,5vw,36px);
-  color:var(--yellow);
-  text-shadow:4px 4px 0 #000, 0 0 20px rgba(250,204,21,0.4);
-  line-height:1.4;
-  margin-bottom:4px;
-}
-.big-title span { color:var(--p-light); text-shadow:4px 4px 0 #000, 0 0 20px var(--p-glow); }
-.title-sub {
-  font-family:var(--vt);
-  font-size:18px;
-  color:var(--dim);
-  letter-spacing:0.15em;
-  margin-top:12px;
-}
-.blink { animation:blink 1s step-end infinite; }
-@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
-
-/* PIXEL HEARTS / STARS */
-.star-row {
-  display:flex;gap:6px;justify-content:center;
-  margin:12px 0;
-}
-.px-star { font-size:12px; animation:float 2s ease-in-out infinite; }
-.px-star:nth-child(2) { animation-delay:0.3s; }
-.px-star:nth-child(3) { animation-delay:0.6s; }
-@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
-
-/* STATS ROW */
-.stats-row {
-  display:flex;
-  gap:16px;
-  justify-content:center;
-  flex-wrap:wrap;
-  width:100%;
-  max-width:600px;
-}
-.stat-box {
-  padding:12px 16px;
-  text-align:center;
-  min-width:100px;
-}
-.stat-num { font-family:var(--pixel); font-size:16px; color:var(--p-light); text-shadow:2px 2px 0 #000; }
-.stat-lbl { font-family:var(--vt); font-size:14px; color:var(--dim); margin-top:4px; letter-spacing:0.1em; }
-
-/* MODE SELECT */
-.mode-select {
-  width:100%;
-  max-width:640px;
-}
-.mode-select-title {
-  font-family:var(--pixel);
-  font-size:8px;
-  color:var(--cyan);
-  text-align:center;
-  margin-bottom:16px;
-  letter-spacing:0.2em;
-}
-.mode-grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  gap:12px;
-}
-.mode-card {
-  padding:20px;
-  cursor:pointer;
-  transition:all 0.1s;
-  position:relative;
-}
-.mode-card:hover {
-  background:#1a1a2e;
-  transform:translate(-2px,-2px);
-  box-shadow:6px 6px 0 0 #000;
-}
-.mode-card:active { transform:translate(2px,2px); box-shadow:2px 2px 0 0 #000; }
-.mode-icon { font-size:20px; margin-bottom:10px; display:block; }
-.mode-name {
-  font-family:var(--pixel);
-  font-size:8px;
-  color:var(--yellow);
-  text-shadow:1px 1px 0 #000;
-  margin-bottom:8px;
-}
-.mode-desc {
-  font-family:var(--vt);
-  font-size:15px;
-  color:var(--dim);
-  line-height:1.5;
-}
-.mode-arrow {
-  position:absolute;
-  bottom:12px;right:12px;
-  font-family:var(--pixel);
-  font-size:8px;
-  color:var(--p-light);
-  opacity:0;
-  transition:opacity 0.1s;
-}
-.mode-card:hover .mode-arrow { opacity:1; }
-
-/* LEADERBOARD */
-.lb-wrap { width:100%;max-width:500px; }
-.lb-title {
-  font-family:var(--pixel);
-  font-size:8px;
-  color:var(--yellow);
-  text-align:center;
-  margin-bottom:12px;
-  text-shadow:1px 1px 0 #000;
-  letter-spacing:0.1em;
-}
-.lb-row {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:10px 14px;
-  border-bottom:2px solid rgba(108,43,217,0.2);
-}
-.lb-rank { font-family:var(--pixel);font-size:8px;width:20px;color:var(--dim); }
-.lb-rank.r1 { color:var(--yellow); }
-.lb-rank.r2 { color:#aaa; }
-.lb-rank.r3 { color:#cd7f32; }
-.lb-addr { font-family:var(--vt);font-size:16px;flex:1;color:var(--white); }
-.lb-score { font-family:var(--pixel);font-size:10px;color:var(--p-light); }
-.lb-pts { font-family:var(--vt);font-size:12px;color:var(--dim);margin-left:2px; }
-
-/* ══════════════════════════════
-   GAME PANEL
-══════════════════════════════ */
-.game-wrap {
-  max-width:640px;
   margin:0 auto;
-  padding:24px 16px 48px;
+  padding:16px 12px 60px;
 }
 
-/* HEADER */
-.game-header {
-  display:flex;align-items:center;gap:12px;
-  margin-bottom:20px;
-}
-.px-back {
-  font-family:var(--pixel);font-size:7px;
-  padding:8px 12px;
-  border:2px solid var(--dim);
-  background:transparent;
-  color:var(--dim);
-  cursor:pointer;
-  box-shadow:2px 2px 0 #000;
-}
-.px-back:hover { border-color:var(--p-light); color:var(--p-light); }
-.game-title {
-  font-family:var(--pixel);font-size:9px;
-  color:var(--yellow);
-  text-shadow:2px 2px 0 #000;
-  flex:1;
-}
-.game-room-code {
-  font-family:var(--pixel);font-size:7px;
-  color:var(--cyan);
-  padding:6px 10px;
-  border:2px solid var(--cyan);
-  background:rgba(34,211,238,0.08);
-  box-shadow:2px 2px 0 #000;
-}
-
-/* HP BAR */
-.hp-bar-wrap {
-  padding:14px 16px;
-  margin-bottom:16px;
-}
-.hp-row {
-  display:flex;align-items:center;gap:12px;
-  margin-bottom:8px;
-}
-.hp-label { font-family:var(--pixel);font-size:7px;color:var(--dim);width:60px; }
-.hp-hearts { display:flex;gap:4px; }
-.heart { font-size:12px; transition:all 0.2s; }
-.heart.empty { filter:grayscale(1) opacity(0.3); }
-.score-disp {
-  font-family:var(--pixel);font-size:10px;
-  color:var(--green);
-  text-shadow:2px 2px 0 #000, 0 0 8px var(--g-glow);
-  margin-left:auto;
-}
-.progress-bar-bg {
-  height:8px;
-  background:#111;
-  border:2px solid var(--dim);
-  box-shadow:2px 2px 0 #000;
-}
-.progress-bar-fill {
-  height:100%;
-  background:var(--purple);
-  box-shadow:0 0 8px var(--p-glow);
-  transition:width 0.3s;
-}
-
-/* DIALOGUE BOX (RPG style) */
-.dialogue-box {
-  padding:20px;
-  margin-bottom:16px;
-  position:relative;
-}
-.dialogue-box::before {
-  content:'▶ RIDDLE';
-  position:absolute;
-  top:-10px;left:12px;
-  background:var(--bg2);
-  padding:0 6px;
-  font-family:var(--pixel);
-  font-size:7px;
-  color:var(--p-light);
-  border:2px solid var(--purple);
-}
-.riddle-num {
-  font-family:var(--pixel);font-size:7px;color:var(--cyan);
-  margin-bottom:10px;
-  letter-spacing:0.1em;
-}
-.riddle-qid {
-  font-family:var(--vt);font-size:13px;color:var(--dim);
-  float:right;
-}
-.riddle-text {
-  font-family:var(--vt);
-  font-size:18px;
-  color:var(--white);
-  line-height:1.6;
-  margin-bottom:16px;
-}
-
-/* OPTION BUTTONS */
-.options-grid { display:flex;flex-direction:column;gap:8px; }
-.opt-btn {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:12px 14px;
-  background:var(--bg3);
-  border:3px solid var(--dim);
-  box-shadow:3px 3px 0 #000;
-  cursor:pointer;
-  transition:all 0.1s;
-  width:100%;
-  text-align:left;
-}
-.opt-btn:hover {
-  border-color:var(--p-light);
-  background:#1a1a2e;
-  transform:translate(-1px,-1px);
-  box-shadow:4px 4px 0 #000;
-}
-.opt-btn:active { transform:translate(1px,1px); box-shadow:2px 2px 0 #000; }
-.opt-btn.selected { border-color:var(--p-light); background:rgba(108,43,217,0.25); }
-.opt-btn.correct  { border-color:var(--green); background:rgba(34,197,94,0.15); box-shadow:3px 3px 0 #000,0 0 12px var(--g-glow); }
-.opt-btn.wrong    { border-color:var(--red); background:rgba(239,68,68,0.12); }
-.opt-letter {
-  font-family:var(--pixel);font-size:8px;
-  width:28px;height:28px;
-  border:2px solid var(--dim);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-  color:var(--p-light);
-  background:var(--bg);
-  transition:all 0.1s;
-}
-.opt-btn:hover .opt-letter,
-.opt-btn.selected .opt-letter { background:var(--purple); border-color:var(--p-light); color:#fff; }
-.opt-btn.correct .opt-letter  { background:var(--green); border-color:var(--green); color:#fff; }
-.opt-btn.wrong .opt-letter    { background:var(--red); border-color:var(--red); color:#fff; }
-.opt-text { font-family:var(--vt);font-size:17px;color:var(--white); }
-
-/* FEEDBACK DIALOGUE */
-.feedback-box {
-  padding:14px 16px;
-  margin:12px 0;
-  display:none;
-}
-.feedback-box.correct { border-color:var(--green); display:block; }
-.feedback-box.wrong   { border-color:var(--red); display:block; }
-.fb-title {
-  font-family:var(--pixel);font-size:8px;
-  margin-bottom:6px;
-}
-.feedback-box.correct .fb-title { color:var(--green); text-shadow:0 0 8px var(--g-glow); }
-.feedback-box.wrong   .fb-title { color:var(--red); }
-.fb-text { font-family:var(--vt);font-size:16px;color:var(--dim); }
-
-/* TX STATUS */
-.tx-box {
-  display:none;
+/* ── PIXEL BUTTON ── */
+.pbtn{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(6px,2vw,8px);
   padding:12px 16px;
-  margin:12px 0;
-  align-items:center;
-  gap:10px;
-  font-family:var(--vt);
-  font-size:16px;
-}
-.tx-box.pending { display:flex; border-color:var(--yellow); color:var(--yellow); }
-.tx-box.ok      { display:flex; border-color:var(--green);  color:var(--green); }
-.tx-box.err     { display:flex; border-color:var(--red);    color:var(--red); }
-.px-spinner {
-  width:16px;height:16px;
-  border:3px solid rgba(250,204,21,0.2);
-  border-top:3px solid var(--yellow);
-  animation:spin 0.6s linear infinite;
-}
-@keyframes spin { to{transform:rotate(360deg);} }
-
-/* SUBMIT ROW */
-.submit-row { display:flex;align-items:center;gap:12px;margin-top:16px; }
-.submit-hint { font-family:var(--vt);font-size:14px;color:var(--dim); }
-
-/* WIN SCREEN */
-.win-screen {
-  text-align:center;
-  padding:32px 20px;
-}
-.win-title {
-  font-family:var(--pixel);
-  font-size:clamp(14px,4vw,24px);
-  color:var(--yellow);
-  text-shadow:3px 3px 0 #000, 0 0 20px rgba(250,204,21,0.5);
-  margin-bottom:12px;
-  line-height:1.5;
-}
-.win-score {
-  font-family:var(--vt);font-size:22px;color:var(--p-light);
-  margin-bottom:20px;
-}
-.coin-row { font-size:20px;margin-bottom:20px; }
-
-/* ══════════════════════════════
-   ROOM CODE DISPLAY
-══════════════════════════════ */
-.room-code-display {
-  text-align:center;
-  padding:28px 20px;
-  margin:16px 0;
-  position:relative;
-}
-.rc-label {
-  font-family:var(--pixel);font-size:7px;
-  color:var(--dim);letter-spacing:0.3em;text-transform:uppercase;
-  margin-bottom:12px;
-}
-.rc-code {
-  font-family:var(--pixel);
-  font-size:clamp(24px,8vw,48px);
-  color:var(--yellow);
-  text-shadow:4px 4px 0 #000, 0 0 30px rgba(250,204,21,0.5);
-  letter-spacing:0.2em;
-  animation:blink-glow 2s ease-in-out infinite;
-}
-@keyframes blink-glow {
-  0%,100%{text-shadow:4px 4px 0 #000,0 0 20px rgba(250,204,21,0.4);}
-  50%{text-shadow:4px 4px 0 #000,0 0 40px rgba(250,204,21,0.7);}
-}
-.rc-hint {
-  font-family:var(--vt);font-size:15px;color:var(--dim);
-  margin-top:12px;line-height:1.8;
-}
-.copy-px-btn {
-  font-family:var(--pixel);font-size:7px;
-  margin-top:14px;
-  padding:10px 16px;
-  border:2px solid var(--cyan);
-  background:rgba(34,211,238,0.08);
-  color:var(--cyan);
+  border:3px solid #a855f7;
+  background:#6c2bd9;
+  color:#fff;
   cursor:pointer;
-  box-shadow:3px 3px 0 #000;
+  box-shadow:4px 4px 0 #000;
+  display:inline-block;
+  text-align:center;
+  transition:transform .1s,box-shadow .1s;
+  width:100%;
+  line-height:1.6;
 }
-.copy-px-btn:hover { background:rgba(34,211,238,0.2); }
+.pbtn:hover{background:#7c3aed;box-shadow:6px 6px 0 #000;transform:translate(-1px,-1px);}
+.pbtn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000;}
+.pbtn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.pbtn.green{background:#16a34a;border-color:#86efac;}
+.pbtn.green:hover{background:#15803d;}
+.pbtn.outline{background:transparent;color:#a855f7;}
+.pbtn.sm{font-size:6px;padding:8px 12px;}
 
-/* INPUT */
-.px-input-group { margin-bottom:16px; }
-.px-label {
-  font-family:var(--pixel);font-size:7px;
-  color:var(--dim);letter-spacing:0.15em;
-  margin-bottom:8px;display:block;
+/* ── TITLE CARD ── */
+.title-card{text-align:center;padding:20px 12px;}
+.title-tag{
+  font-size:clamp(5px,1.5vw,7px);
+  color:#22d3ee;
+  letter-spacing:0.2em;
+  margin-bottom:12px;
   text-transform:uppercase;
 }
-.px-input {
+.big-title{
+  font-size:clamp(16px,6vw,36px);
+  color:#facc15;
+  text-shadow:3px 3px 0 #000,0 0 20px rgba(250,204,21,0.3);
+  line-height:1.3;
+  margin-bottom:8px;
+}
+.big-title span{color:#a855f7;text-shadow:3px 3px 0 #000,0 0 20px rgba(168,85,247,0.4);}
+.title-sub{font-family:'VT323',monospace;font-size:clamp(14px,4vw,18px);color:#555577;letter-spacing:0.1em;margin-top:8px;}
+.blink{animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* ── STATS ── */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  margin:16px 0;
+}
+@media(min-width:400px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
+.stat-box{padding:12px 8px;text-align:center;}
+.stat-num{font-size:clamp(12px,4vw,18px);color:#a855f7;text-shadow:2px 2px 0 #000;}
+.stat-lbl{font-family:'VT323',monospace;font-size:13px;color:#555577;margin-top:4px;}
+
+/* ── MODE CARDS ── */
+.mode-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:16px 0;
+}
+.mode-card{
+  padding:14px 10px;
+  cursor:pointer;
+  transition:transform .1s,box-shadow .1s;
+}
+.mode-card:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #000;}
+.mode-card:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000;}
+.mode-icon{font-size:18px;margin-bottom:8px;display:block;}
+.mode-name{
+  font-size:clamp(5px,2vw,7px);
+  color:#facc15;
+  text-shadow:1px 1px 0 #000;
+  margin-bottom:6px;
+  line-height:1.6;
+}
+.mode-desc{font-family:'VT323',monospace;font-size:clamp(12px,3vw,14px);color:#555577;line-height:1.5;}
+
+/* ── LEADERBOARD ── */
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:2px solid rgba(108,43,217,0.2);}
+.lb-rank{font-size:7px;width:18px;color:#555577;}
+.lb-rank.r1{color:#facc15;}.lb-rank.r2{color:#aaa;}.lb-rank.r3{color:#cd7f32;}
+.lb-addr{font-family:'VT323',monospace;font-size:clamp(13px,3vw,16px);flex:1;color:#e2e2ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-score{font-size:clamp(7px,2vw,9px);color:#a855f7;}
+
+/* ── GAME HEADER ── */
+.game-hdr{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.back-btn{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(6px,2vw,7px);
+  padding:8px 10px;
+  border:2px solid #555577;
+  background:transparent;
+  color:#555577;
+  cursor:pointer;
+  box-shadow:2px 2px 0 #000;
+  white-space:nowrap;
+}
+.back-btn:hover{border-color:#a855f7;color:#a855f7;}
+.game-title{font-size:clamp(7px,2.5vw,10px);color:#facc15;text-shadow:1px 1px 0 #000;flex:1;}
+.room-tag{font-size:6px;color:#22d3ee;padding:5px 8px;border:2px solid #22d3ee;background:rgba(34,211,238,0.08);box-shadow:2px 2px 0 #000;white-space:nowrap;}
+
+/* ── HP BAR ── */
+.hp-wrap{padding:12px 14px;margin-bottom:12px;}
+.hp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.hp-lbl{font-size:6px;color:#555577;width:44px;flex-shrink:0;}
+.hp-hearts{display:flex;gap:4px;}
+.heart{font-size:12px;color:#ef4444;}
+.heart.empty{color:#222;filter:grayscale(1);}
+.score-disp{font-size:10px;color:#22c55e;text-shadow:0 0 6px rgba(34,197,94,0.4);margin-left:auto;}
+.prog-bg{height:8px;background:#111;border:2px solid #333;box-shadow:2px 2px 0 #000;}
+.prog-fill{height:100%;background:#6c2bd9;transition:width .4s;}
+
+/* ── DIALOGUE BOX ── */
+.dialogue{padding:16px;margin-bottom:12px;position:relative;}
+.dialogue::before{
+  content:'▶ RIDDLE';
+  position:absolute;top:-10px;left:10px;
+  background:#111122;
+  padding:0 6px;
+  font-size:6px;color:#a855f7;
+  border:2px solid #6c2bd9;
+}
+.riddle-meta{font-size:clamp(5px,1.5vw,7px);color:#22d3ee;margin-bottom:10px;}
+.riddle-qid{float:right;font-size:6px;color:#333;}
+.riddle-text{font-family:'VT323',monospace;font-size:clamp(16px,4vw,20px);color:#e2e2ff;line-height:1.6;margin-bottom:14px;}
+
+/* ── OPTIONS ── */
+.opts-grid{display:flex;flex-direction:column;gap:8px;}
+.opt-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:12px;
+  background:#0d0d1a;
+  border:3px solid #222;
+  box-shadow:3px 3px 0 #000;
+  cursor:pointer;
   width:100%;
-  background:var(--bg3);
-  border:3px solid var(--dim);
+  transition:transform .1s,box-shadow .1s;
+  text-align:left;
+}
+.opt-btn:hover{border-color:#a855f7;background:#1a1a2e;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #000;}
+.opt-btn:active{transform:translate(1px,1px);box-shadow:2px 2px 0 #000;}
+.opt-btn.selected{border-color:#a855f7;background:rgba(108,43,217,0.2);}
+.opt-btn.correct{border-color:#22c55e;background:rgba(34,197,94,0.12);}
+.opt-btn.wrong{border-color:#ef4444;background:rgba(239,68,68,0.1);}
+.opt-letter{
+  font-size:clamp(6px,2vw,8px);
+  width:28px;height:28px;
+  border:2px solid #333;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;color:#a855f7;
+  background:#0a0a0f;
+}
+.opt-btn:hover .opt-letter,.opt-btn.selected .opt-letter{background:#6c2bd9;border-color:#a855f7;color:#fff;}
+.opt-btn.correct .opt-letter{background:#22c55e;border-color:#22c55e;color:#fff;}
+.opt-btn.wrong .opt-letter{background:#ef4444;border-color:#ef4444;color:#fff;}
+.opt-text{font-family:'VT323',monospace;font-size:clamp(15px,4vw,18px);color:#e2e2ff;line-height:1.4;}
+
+/* ── FEEDBACK ── */
+.feedback{padding:12px 14px;margin:10px 0;display:none;}
+.feedback.correct{display:block;border-color:#22c55e;}
+.feedback.wrong{display:block;border-color:#ef4444;}
+.fb-title{font-size:7px;margin-bottom:6px;}
+.feedback.correct .fb-title{color:#22c55e;}
+.feedback.wrong .fb-title{color:#ef4444;}
+.fb-text{font-family:'VT323',monospace;font-size:15px;color:#555577;}
+
+/* ── TX STATUS ── */
+.tx-status{
+  display:none;
+  padding:10px 14px;
+  margin:10px 0;
+  align-items:center;gap:10px;
+  font-family:'VT323',monospace;
+  font-size:clamp(14px,3vw,16px);
+}
+.tx-status.pending{display:flex;border-color:#facc15;color:#facc15;}
+.tx-status.ok{display:flex;border-color:#22c55e;color:#22c55e;}
+.tx-status.err{display:flex;border-color:#ef4444;color:#ef4444;}
+.spinner{
+  width:14px;height:14px;flex-shrink:0;
+  border:3px solid rgba(250,204,21,0.2);
+  border-top:3px solid #facc15;
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── SUBMIT ROW ── */
+.submit-row{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.submit-hint{font-family:'VT323',monospace;font-size:14px;color:#555577;}
+
+/* ── ROOM CODE ── */
+.rc-display{text-align:center;padding:24px 16px;}
+.rc-label{font-size:clamp(5px,1.5vw,7px);color:#555577;letter-spacing:0.25em;margin-bottom:12px;}
+.rc-code{
+  font-size:clamp(22px,8vw,44px);
+  color:#facc15;
+  text-shadow:3px 3px 0 #000,0 0 24px rgba(250,204,21,0.4);
+  letter-spacing:0.15em;
+  word-break:break-all;
+}
+.rc-hint{font-family:'VT323',monospace;font-size:14px;color:#555577;margin-top:10px;line-height:1.7;}
+.copy-btn{
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;
+  margin-top:12px;
+  padding:10px 14px;
+  border:2px solid #22d3ee;
+  background:rgba(34,211,238,0.08);
+  color:#22d3ee;
+  cursor:pointer;
+  box-shadow:2px 2px 0 #000;
+}
+.copy-btn:active{transform:translate(2px,2px);box-shadow:none;}
+
+/* ── INPUT ── */
+.input-grp{margin-bottom:14px;}
+.px-label{
+  font-size:clamp(5px,1.5vw,7px);
+  color:#555577;
+  letter-spacing:0.12em;
+  margin-bottom:6px;
+  display:block;
+  text-transform:uppercase;
+  line-height:1.8;
+}
+.px-input{
+  width:100%;
+  background:#0d0d1a;
+  border:3px solid #333;
   padding:10px 12px;
-  color:var(--white);
-  font-family:var(--vt);
-  font-size:18px;
+  color:#e2e2ff;
+  font-family:'VT323',monospace;
+  font-size:clamp(16px,4vw,18px);
   outline:none;
   box-shadow:3px 3px 0 #000;
-  transition:border-color 0.15s;
 }
-.px-input:focus { border-color:var(--p-light); }
-.px-input::placeholder { color:var(--dim); }
-textarea.px-input { resize:vertical; min-height:80px; }
+.px-input:focus{border-color:#a855f7;}
+.px-input::placeholder{color:#333;}
+textarea.px-input{resize:vertical;min-height:72px;}
 
-/* PLAYER ROW */
-.player-list { margin:12px 0; }
-.player-row {
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;
-  border-bottom:2px solid rgba(108,43,217,0.2);
-}
-.px-dot {
-  width:8px;height:8px;
-  background:var(--green);
-  box-shadow:0 0 6px var(--g-glow);
-}
-.player-addr { font-family:var(--vt);font-size:15px;color:var(--white);flex:1; }
-.px-badge {
-  font-family:var(--pixel);font-size:6px;
-  padding:4px 6px;
-  border:2px solid;
-}
-.px-badge.host { color:var(--yellow);border-color:var(--yellow);background:rgba(250,204,21,0.08); }
-.px-badge.you  { color:var(--green); border-color:var(--green); background:rgba(34,197,94,0.08); }
+/* ── GRID 2 ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 
-/* CALLOUT */
-.px-callout {
-  padding:14px 16px;
-  margin:12px 0;
-  font-family:var(--vt);
-  font-size:16px;
-  color:var(--dim);
+/* ── PLAYERS ── */
+.player-list{margin:10px 0;}
+.player-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:2px solid rgba(108,43,217,0.2);}
+.p-dot{width:8px;height:8px;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5);flex-shrink:0;}
+.p-addr{font-family:'VT323',monospace;font-size:clamp(13px,3vw,15px);color:#e2e2ff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.badge{font-size:6px;padding:3px 6px;border:2px solid;white-space:nowrap;flex-shrink:0;}
+.badge.host{color:#facc15;border-color:#facc15;background:rgba(250,204,21,0.08);}
+.badge.you{color:#22c55e;border-color:#22c55e;background:rgba(34,197,94,0.08);}
+
+/* ── CALLOUT ── */
+.callout{
+  padding:12px 14px;
+  margin:10px 0;
+  font-family:'VT323',monospace;
+  font-size:clamp(14px,3.5vw,16px);
+  color:#7777aa;
   line-height:1.7;
-  border-color:rgba(108,43,217,0.5);
+  border-color:rgba(108,43,217,0.4);
 }
-.px-callout strong { color:var(--p-light); font-family:var(--pixel);font-size:7px; }
+.callout strong{color:#a855f7;font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.5vw,7px);display:block;margin-bottom:6px;}
 
-/* SECTION HEADER */
-.section-hdr {
-  display:flex;align-items:center;gap:10px;
-  margin:20px 0 12px;
-  font-family:var(--pixel);font-size:7px;
-  color:var(--dim);letter-spacing:0.15em;
+/* ── SECTION HDR ── */
+.sec-hdr{
+  display:flex;align-items:center;gap:8px;
+  margin:16px 0 10px;
+  font-size:clamp(5px,1.5vw,7px);color:#555577;
+  letter-spacing:0.15em;
 }
-.section-hdr::before,.section-hdr::after { content:'';flex:1;height:2px;background:rgba(108,43,217,0.3); }
+.sec-hdr::before,.sec-hdr::after{content:'';flex:1;height:2px;background:rgba(108,43,217,0.3);}
 
-/* GRID 2 */
-.grid2 { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
-
-/* FOOTER */
-footer {
-  position:relative;z-index:2;
-  border-top:4px solid var(--purple);
-  box-shadow:0 -4px 0 #000;
-  padding:16px;
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+/* ── WIN SCREEN ── */
+.win-screen{text-align:center;padding:24px 16px;}
+.win-title{
+  font-size:clamp(12px,4vw,20px);
+  color:#facc15;
+  text-shadow:2px 2px 0 #000,0 0 16px rgba(250,204,21,0.4);
+  margin-bottom:10px;
+  line-height:1.4;
 }
-.footer-brand { font-family:var(--pixel);font-size:7px;color:var(--dim);letter-spacing:0.1em; }
-.footer-link { font-family:var(--vt);font-size:14px;color:var(--dim);text-decoration:none;transition:color 0.2s; }
-.footer-link:hover { color:var(--p-light); }
-.footer-right { margin-left:auto;display:flex;align-items:center;gap:8px; }
-.online-dot { width:8px;height:8px;background:var(--green);box-shadow:0 0 6px var(--g-glow); }
-.footer-contract { font-family:var(--vt);font-size:14px;color:var(--dim); }
+.win-score{font-family:'VT323',monospace;font-size:clamp(18px,5vw,24px);color:#a855f7;margin-bottom:16px;}
+.coin-row{font-size:18px;margin-bottom:16px;}
 
-/* ══════════════════════════════
-   CUSTOM RIDDLE
-══════════════════════════════ */
-.cr-success {
-  display:none;
-  padding:16px;
-  border-color:var(--green);
-  margin:12px 0;
+/* ── FOOTER ── */
+footer{
+  position:relative;z-index:1;
+  border-top:3px solid #6c2bd9;
+  box-shadow:0 -3px 0 #000;
+  padding:12px;
+  display:flex;flex-wrap:wrap;
+  align-items:center;gap:8px;
 }
-.cr-success.show { display:block; }
+.foot-brand{font-size:clamp(5px,1.5vw,7px);color:#333;}
+.foot-link{font-family:'VT323',monospace;font-size:13px;color:#555577;text-decoration:none;}
+.foot-link:hover{color:#a855f7;}
+.foot-right{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.online-dot{width:6px;height:6px;background:#22c55e;box-shadow:0 0 4px rgba(34,197,94,0.5);}
+.foot-contract{font-family:'VT323',monospace;font-size:12px;color:#333;}
 
-/* ══ RESPONSIVE ══ */
-@media(max-width:480px){
-  .big-title { font-size:18px; }
-  .stats-row { gap:8px; }
-  .stat-box { min-width:70px; }
-  .rc-code { font-size:24px; }
+/* ── MOBILE FIXES ── */
+@media(max-width:360px){
+  .mode-grid{grid-template-columns:1fr;}
+  .grid2{grid-template-columns:1fr;}
+  .big-title{font-size:14px;}
+  .rc-code{font-size:20px;}
 }
 </style>
 </head>
@@ -683,649 +416,598 @@ footer {
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo" onclick="showView('home')">RIDDLE<span>CHAIN</span></div>
-  <div class="nav-space"></div>
-  <div class="nav-lives" id="navLives">❤❤❤</div>
-  <button id="walletBtn" onclick="connectWallet()">[ CONNECT WALLET ]</button>
+  <div class="nav-logo" onclick="show('home')">RIDDLE<span>CHAIN</span></div>
+  <div class="nav-sp"></div>
+  <button id="walletBtn" onclick="connectWallet()">[ CONNECT ]</button>
 </nav>
 
-<!-- ══════════ HOME ══════════ -->
+<!-- ══ HOME ══ -->
 <div class="view active" id="view-home">
-<div class="home-wrap">
-
-  <div class="title-card px-box">
-    <div class="title-badge">▶ GENLAYER INTELLIGENT CONTRACT</div>
+<div class="page">
+  <div class="title-card pbox">
+    <div class="title-tag">▶ GENLAYER INTELLIGENT CONTRACT</div>
     <div class="big-title">RIDDLE<br><span>CHAIN</span></div>
-    <div class="star-row"><div class="px-star">⭐</div><div class="px-star">★</div><div class="px-star">⭐</div></div>
     <div class="title-sub">AI-JUDGED · ON-CHAIN · MULTIPLAYER<span class="blink">_</span></div>
   </div>
 
-  <div class="stats-row">
-    <div class="stat-box px-box">
-      <div class="stat-num" id="totalQHome">15</div>
-      <div class="stat-lbl">QUESTIONS</div>
+  <div class="stats-grid" style="margin-top:12px;">
+    <div class="stat-box pbox"><div class="stat-num" id="totalQ">15</div><div class="stat-lbl">QUESTIONS</div></div>
+    <div class="stat-box pbox"><div class="stat-num">∞</div><div class="stat-lbl">PLAYERS</div></div>
+    <div class="stat-box pbox"><div class="stat-num" style="color:#22c55e">AI</div><div class="stat-lbl">JUDGE</div></div>
+    <div class="stat-box pbox"><div class="stat-num" style="color:#facc15">100%</div><div class="stat-lbl">ON-CHAIN</div></div>
+  </div>
+
+  <div style="font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.5vw,7px);color:#22d3ee;text-align:center;margin:16px 0 8px;letter-spacing:0.2em;">▶ SELECT MODE</div>
+  <div class="mode-grid">
+    <div class="mode-card pbox" onclick="startSolo()">
+      <span class="mode-icon">⚡</span>
+      <div class="mode-name">SOLO PLAY</div>
+      <div class="mode-desc">5 shuffled riddles. Compete globally.</div>
     </div>
-    <div class="stat-box px-box">
-      <div class="stat-num">∞</div>
-      <div class="stat-lbl">PLAYERS</div>
+    <div class="mode-card pbox cyan" onclick="show('create-room')">
+      <span class="mode-icon">🏰</span>
+      <div class="mode-name" style="color:#22d3ee">CREATE ROOM</div>
+      <div class="mode-desc">Host a game. Share code.</div>
     </div>
-    <div class="stat-box px-box">
-      <div class="stat-num" style="color:var(--green)">AI</div>
-      <div class="stat-lbl">JUDGE</div>
+    <div class="mode-card pbox green" onclick="show('join-room')">
+      <span class="mode-icon">🎮</span>
+      <div class="mode-name" style="color:#22c55e">JOIN ROOM</div>
+      <div class="mode-desc">Got a code? Jump in.</div>
     </div>
-    <div class="stat-box px-box">
-      <div class="stat-num" style="color:var(--yellow)">100%</div>
-      <div class="stat-lbl">ON-CHAIN</div>
+    <div class="mode-card pbox yellow" onclick="show('custom-riddle')">
+      <span class="mode-icon">✏️</span>
+      <div class="mode-name" style="color:#facc15">MAKE RIDDLE</div>
+      <div class="mode-desc">Create & challenge friends.</div>
     </div>
   </div>
 
-  <div class="mode-select">
-    <div class="mode-select-title">▶ SELECT MODE</div>
-    <div class="mode-grid">
-      <div class="mode-card px-box" onclick="startSolo()">
-        <span class="mode-icon">⚡</span>
-        <div class="mode-name">SOLO PLAY</div>
-        <div class="mode-desc">5 shuffled riddles. Unique to your wallet. Compete globally.</div>
-        <div class="mode-arrow">▶▶</div>
-      </div>
-      <div class="mode-card px-box" onclick="showView('create-room')">
-        <span class="mode-icon">🏰</span>
-        <div class="mode-name">CREATE ROOM</div>
-        <div class="mode-desc">Host a game. Share your room code. Battle friends.</div>
-        <div class="mode-arrow">▶▶</div>
-      </div>
-      <div class="mode-card px-box" onclick="showView('join-room')">
-        <span class="mode-icon">🎮</span>
-        <div class="mode-name">JOIN ROOM</div>
-        <div class="mode-desc">Got a code? Enter a friend's game now.</div>
-        <div class="mode-arrow">▶▶</div>
-      </div>
-      <div class="mode-card px-box" onclick="showView('custom-riddle')">
-        <span class="mode-icon">✏️</span>
-        <div class="mode-name">MAKE RIDDLE</div>
-        <div class="mode-desc">Write your own riddle. Add it. Challenge friends.</div>
-        <div class="mode-arrow">▶▶</div>
-      </div>
-    </div>
+  <div class="sec-hdr">🏆 HALL OF FAME</div>
+  <div class="pbox" id="lbBox">
+    <div class="lb-row"><div class="lb-rank" style="color:#555577">-</div><div class="lb-addr">CONNECT WALLET TO PLAY</div><div class="lb-score">-</div></div>
   </div>
-
-  <div class="lb-wrap">
-    <div class="lb-title">🏆 HALL OF FAME</div>
-    <div class="px-box" id="lbContainer">
-      <div class="lb-row">
-        <div class="lb-rank r1">1</div>
-        <div class="lb-addr">WAITING FOR PLAYERS...</div>
-        <div class="lb-score">-</div>
-      </div>
-    </div>
-  </div>
-
 </div>
 </div>
 
-<!-- ══════════ SOLO ══════════ -->
+<!-- ══ SOLO ══ -->
 <div class="view" id="view-solo">
-<div class="game-wrap">
-  <div class="game-header">
-    <button class="px-back" onclick="showView('home')">◀ BACK</button>
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ BACK</button>
     <div class="game-title">⚡ SOLO MODE</div>
-    <div id="soloPlayerTag" style="font-family:var(--vt);font-size:14px;color:var(--dim);"></div>
+    <div id="soloTag" style="font-family:'VT323',monospace;font-size:13px;color:#555577;"></div>
   </div>
 
-  <div class="hp-bar-wrap px-box">
+  <div class="hp-wrap pbox">
     <div class="hp-row">
-      <div class="hp-label">SCORE</div>
+      <div class="hp-lbl">SCORE</div>
       <div class="hp-hearts" id="soloHearts">
-        <div class="heart empty">♥</div>
-        <div class="heart empty">♥</div>
-        <div class="heart empty">♥</div>
-        <div class="heart empty">♥</div>
+        <div class="heart empty">♥</div><div class="heart empty">♥</div>
+        <div class="heart empty">♥</div><div class="heart empty">♥</div>
         <div class="heart empty">♥</div>
       </div>
-      <div class="score-disp" id="soloScore">0/5</div>
+      <div class="score-disp" id="soloScoreDisp">0/5</div>
     </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="soloProgressBar" style="width:0%"></div>
-    </div>
+    <div class="prog-bg"><div class="prog-fill" id="soloBar" style="width:0%"></div></div>
   </div>
 
-  <div class="dialogue-box px-box" id="soloQuestionBox">
-    <div style="text-align:center;padding:20px;">
-      <div style="font-family:var(--vt);font-size:18px;color:var(--dim);">Connect wallet and press START<span class="blink">_</span></div>
-    </div>
+  <div class="dialogue pbox" id="soloBox">
+    <div style="font-family:'VT323',monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">CONNECT WALLET AND PRESS START<span class="blink">_</span></div>
   </div>
-
-  <div class="feedback-box px-box" id="soloFeedback"></div>
-  <div class="tx-box px-box" id="soloTx"><div class="px-spinner"></div><span id="soloTxMsg">SUBMITTING TO GENLAYER...</span></div>
-
+  <div class="feedback pbox" id="soloFb"></div>
+  <div class="tx-status pbox" id="soloTx"><div class="spinner"></div><span>SUBMITTING TO GENLAYER...</span></div>
   <div class="submit-row">
-    <button class="px-btn" id="soloSubmitBtn" onclick="submitSolo()" disabled>▶ SUBMIT</button>
+    <button class="pbtn sm" id="soloBtn" onclick="submitSolo()" disabled style="width:auto;">▶ SUBMIT</button>
     <div class="submit-hint" id="soloHint">SELECT AN OPTION</div>
   </div>
 </div>
 </div>
 
-<!-- ══════════ CREATE ROOM ══════════ -->
+<!-- ══ CREATE ROOM ══ -->
 <div class="view" id="view-create-room">
-<div class="game-wrap">
-  <div class="game-header">
-    <button class="px-back" onclick="showView('home')">◀ BACK</button>
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ BACK</button>
     <div class="game-title">🏰 CREATE ROOM</div>
   </div>
-
-  <div class="px-callout px-box">
-    <strong>HOW IT WORKS</strong><br>
-    Create a room → get a 6-char code → share with friends → each player gets their own shuffle → first to score 5 wins!
+  <div class="callout pbox">
+    <strong>HOW IT WORKS</strong>
+    Create a room → get a code → share with friends → each player gets their own shuffled riddles → first to 5 wins!
   </div>
-
-  <div class="px-input-group">
+  <div class="input-grp">
     <label class="px-label">YOUR WALLET ADDRESS</label>
     <input class="px-input" id="createWallet" placeholder="0x..." />
   </div>
+  <div class="tx-status pbox" id="createTx"><div class="spinner"></div><span>CREATING ROOM ON GENLAYER...</span></div>
+  <button class="pbtn" id="createBtn" onclick="createRoom()">▶ CREATE ROOM</button>
 
-  <div class="tx-box px-box" id="createRoomTx"><div class="px-spinner"></div><span>CREATING ROOM ON GENLAYER...</span></div>
-  <button class="px-btn full" id="createRoomBtn" onclick="createRoom()">▶ CREATE ROOM</button>
-
-  <div id="roomCreatedSection" style="display:none;">
-    <div class="room-code-display px-box yellow-border">
+  <div id="createdSection" style="display:none;margin-top:16px;">
+    <div class="rc-display pbox yellow">
       <div class="rc-label">YOUR ROOM CODE</div>
       <div class="rc-code" id="displayCode">------</div>
-      <div class="rc-hint">SHARE THIS CODE WITH FRIENDS<br>THEY JOIN WITH: JOIN ROOM</div>
-      <button class="copy-px-btn" onclick="copyCode()">[ COPY CODE ]</button>
+      <div class="rc-hint">SHARE WITH FRIENDS<br>THEY JOIN USING: JOIN ROOM</div>
+      <button class="copy-btn" onclick="copyCode()">[ COPY CODE ]</button>
     </div>
-    <div class="px-input-group">
+    <div class="input-grp" style="margin-top:12px;">
       <label class="px-label">PLAYERS IN ROOM</label>
-      <div class="player-list px-box" id="createdPlayerList"></div>
+      <div class="player-list pbox" id="createdPlayers"></div>
     </div>
-    <button class="px-btn green full" onclick="goToRoomGame()">▶ START PLAYING</button>
+    <button class="pbtn green" onclick="goPlay()" style="margin-top:8px;">▶ START PLAYING</button>
   </div>
 </div>
 </div>
 
-<!-- ══════════ JOIN ROOM ══════════ -->
+<!-- ══ JOIN ROOM ══ -->
 <div class="view" id="view-join-room">
-<div class="game-wrap">
-  <div class="game-header">
-    <button class="px-back" onclick="showView('home')">◀ BACK</button>
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ BACK</button>
     <div class="game-title">🎮 JOIN ROOM</div>
   </div>
-
-  <div class="px-input-group">
+  <div class="input-grp">
     <label class="px-label">YOUR WALLET ADDRESS</label>
     <input class="px-input" id="joinWallet" placeholder="0x..." />
   </div>
-  <div class="px-input-group">
+  <div class="input-grp">
     <label class="px-label">ROOM CODE</label>
-    <input class="px-input" id="joinCode" placeholder="e.g. VSKQR62" style="text-transform:uppercase;letter-spacing:0.3em;font-size:22px;" maxlength="7" />
+    <input class="px-input" id="joinCode" placeholder="e.g. VSKQR62" style="text-transform:uppercase;letter-spacing:0.25em;font-size:20px;" maxlength="7" />
   </div>
-
-  <div class="tx-box px-box" id="joinRoomTx"><div class="px-spinner"></div><span>JOINING ROOM...</span></div>
-  <button class="px-btn full" onclick="joinRoom()">▶ JOIN ROOM</button>
-
-  <div id="joinedSection" style="display:none;margin-top:16px;">
-    <div class="feedback-box correct px-box" id="joinedMsg" style="display:block;"></div>
-    <button class="px-btn green full" style="margin-top:12px;" onclick="goToRoomGame()">▶ START PLAYING</button>
+  <div class="tx-status pbox" id="joinTx"><div class="spinner"></div><span>JOINING ROOM...</span></div>
+  <button class="pbtn" onclick="joinRoom()">▶ JOIN ROOM</button>
+  <div id="joinedSection" style="display:none;margin-top:14px;">
+    <div class="feedback correct pbox" id="joinedMsg" style="display:block;"></div>
+    <button class="pbtn green" style="margin-top:10px;" onclick="goPlay()">▶ START PLAYING</button>
   </div>
 </div>
 </div>
 
-<!-- ══════════ ROOM GAME ══════════ -->
+<!-- ══ ROOM GAME ══ -->
 <div class="view" id="view-room-game">
-<div class="game-wrap">
-  <div class="game-header">
-    <button class="px-back" onclick="showView('home')">◀ EXIT</button>
-    <div class="game-title" id="roomGameTitle">ROOM GAME</div>
-    <div class="game-room-code" id="roomCodeTag"></div>
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ EXIT</button>
+    <div class="game-title" id="roomTitle">ROOM GAME</div>
+    <div class="room-tag" id="roomTag"></div>
   </div>
-
-  <div class="hp-bar-wrap px-box">
+  <div class="hp-wrap pbox">
     <div class="hp-row">
-      <div class="hp-label">ROOM</div>
+      <div class="hp-lbl">ROOM</div>
       <div class="hp-hearts" id="roomHearts">
-        <div class="heart empty">♥</div>
-        <div class="heart empty">♥</div>
-        <div class="heart empty">♥</div>
-        <div class="heart empty">♥</div>
+        <div class="heart empty">♥</div><div class="heart empty">♥</div>
+        <div class="heart empty">♥</div><div class="heart empty">♥</div>
         <div class="heart empty">♥</div>
       </div>
-      <div class="score-disp" id="roomScore">0/5</div>
+      <div class="score-disp" id="roomScoreDisp">0/5</div>
     </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="roomProgressBar" style="width:0%"></div>
-    </div>
+    <div class="prog-bg"><div class="prog-fill" id="roomBar" style="width:0%"></div></div>
   </div>
-
-  <div class="dialogue-box px-box" id="roomQuestionBox">
-    <div style="text-align:center;padding:20px;font-family:var(--vt);font-size:18px;color:var(--dim);">LOADING RIDDLE...<span class="blink">_</span></div>
+  <div class="dialogue pbox" id="roomBox">
+    <div style="font-family:'VT323',monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">LOADING RIDDLE...<span class="blink">_</span></div>
   </div>
-
-  <div class="feedback-box px-box" id="roomFeedback"></div>
-  <div class="tx-box px-box" id="roomTx"><div class="px-spinner"></div><span>SUBMITTING ANSWER...</span></div>
-
+  <div class="feedback pbox" id="roomFb"></div>
+  <div class="tx-status pbox" id="roomTx"><div class="spinner"></div><span>SUBMITTING ANSWER...</span></div>
   <div class="submit-row">
-    <button class="px-btn" id="roomSubmitBtn" onclick="submitRoom()" disabled>▶ SUBMIT</button>
+    <button class="pbtn sm" id="roomBtn" onclick="submitRoom()" disabled style="width:auto;">▶ SUBMIT</button>
   </div>
-
-  <div class="section-hdr">ROOM LEADERBOARD</div>
-  <div class="px-box" id="roomLbContainer"></div>
+  <div class="sec-hdr">ROOM LEADERBOARD</div>
+  <div class="pbox" id="roomLb"></div>
 </div>
 </div>
 
-<!-- ══════════ CUSTOM RIDDLE ══════════ -->
+<!-- ══ CUSTOM RIDDLE ══ -->
 <div class="view" id="view-custom-riddle">
-<div class="game-wrap">
-  <div class="game-header">
-    <button class="px-back" onclick="showView('home')">◀ BACK</button>
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ BACK</button>
     <div class="game-title">✏️ MAKE RIDDLE</div>
   </div>
-
-  <div class="px-callout px-box">
-    <strong>CREATE YOUR OWN RIDDLE</strong><br>
-    Write it, submit it on-chain, then create a custom room to challenge friends with YOUR questions.
+  <div class="callout pbox">
+    <strong>CREATE YOUR OWN RIDDLE</strong>
+    Write it, submit on-chain, then create a custom room to challenge friends with your questions.
   </div>
-
-  <div class="px-input-group">
+  <div class="input-grp">
     <label class="px-label">YOUR WALLET</label>
-    <input class="px-input" id="crAuthor" placeholder="0x..." />
+    <input class="px-input" id="crWallet" placeholder="0x..." />
   </div>
-  <div class="px-input-group">
+  <div class="input-grp">
     <label class="px-label">YOUR RIDDLE QUESTION</label>
     <textarea class="px-input" id="crRiddle" placeholder="Write your riddle here..."></textarea>
   </div>
-
   <div class="grid2">
-    <div class="px-input-group">
-      <label class="px-label">OPTION A</label>
-      <input class="px-input" id="crA" placeholder="Option A" />
-    </div>
-    <div class="px-input-group">
-      <label class="px-label">OPTION B</label>
-      <input class="px-input" id="crB" placeholder="Option B" />
-    </div>
-    <div class="px-input-group">
-      <label class="px-label">OPTION C</label>
-      <input class="px-input" id="crC" placeholder="Option C" />
-    </div>
-    <div class="px-input-group">
-      <label class="px-label">OPTION D</label>
-      <input class="px-input" id="crD" placeholder="Option D" />
-    </div>
-    <div class="px-input-group">
-      <label class="px-label">CORRECT LETTER</label>
-      <input class="px-input" id="crLetter" placeholder="B" maxlength="1" style="text-transform:uppercase;" />
-    </div>
-    <div class="px-input-group">
-      <label class="px-label">CORRECT ANSWER</label>
-      <input class="px-input" id="crAnswer" placeholder="e.g. bitcoin" />
-    </div>
+    <div class="input-grp"><label class="px-label">OPTION A</label><input class="px-input" id="crA" placeholder="Option A" /></div>
+    <div class="input-grp"><label class="px-label">OPTION B</label><input class="px-input" id="crB" placeholder="Option B" /></div>
+    <div class="input-grp"><label class="px-label">OPTION C</label><input class="px-input" id="crC" placeholder="Option C" /></div>
+    <div class="input-grp"><label class="px-label">OPTION D</label><input class="px-input" id="crD" placeholder="Option D" /></div>
+    <div class="input-grp"><label class="px-label">CORRECT LETTER</label><input class="px-input" id="crLetter" placeholder="B" maxlength="1" style="text-transform:uppercase;" /></div>
+    <div class="input-grp"><label class="px-label">CORRECT ANSWER</label><input class="px-input" id="crAnswer" placeholder="e.g. bitcoin" /></div>
   </div>
-
-  <div class="tx-box px-box" id="crTx"><div class="px-spinner"></div><span>ADDING TO GENLAYER...</span></div>
-  <button class="px-btn full" onclick="addCustomRiddle()">▶ ADD RIDDLE ON-CHAIN</button>
-
-  <div class="cr-success px-box green-border" id="crSuccess">
-    <div style="font-family:var(--pixel);font-size:7px;color:var(--green);margin-bottom:8px;">✓ RIDDLE ADDED!</div>
-    <div style="font-family:var(--vt);font-size:15px;color:var(--dim);" id="crSuccessMsg"></div>
-    <button class="px-btn" style="margin-top:12px;" onclick="showView('create-room')">▶ CREATE CUSTOM ROOM</button>
+  <div class="tx-status pbox" id="crTx"><div class="spinner"></div><span>ADDING TO GENLAYER...</span></div>
+  <button class="pbtn" onclick="addRiddle()">▶ ADD RIDDLE ON-CHAIN</button>
+  <div id="crSuccess" style="display:none;margin-top:14px;">
+    <div class="feedback correct pbox" style="display:block;"><div class="fb-title">✓ RIDDLE ADDED!</div><div class="fb-text" id="crSuccessMsg"></div></div>
+    <button class="pbtn" style="margin-top:10px;" onclick="show('create-room')">▶ CREATE CUSTOM ROOM</button>
   </div>
-
-  <div class="section-hdr">COMMUNITY RIDDLES</div>
-  <div class="px-box" id="crList">
-    <div style="padding:16px;font-family:var(--vt);font-size:16px;color:var(--dim);">NO CUSTOM RIDDLES YET. BE THE FIRST!</div>
+  <div class="sec-hdr">COMMUNITY RIDDLES</div>
+  <div class="pbox" id="crList">
+    <div style="padding:14px;font-family:'VT323',monospace;font-size:15px;color:#555577;">NO CUSTOM RIDDLES YET. BE THE FIRST!</div>
   </div>
 </div>
 </div>
+
+<!-- WALLET PICKER MODAL -->
+<div id="walletModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+  <div class="pbox" style="width:100%;max-width:380px;padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:clamp(7px,2vw,9px);color:#facc15;text-shadow:1px 1px 0 #000;">SELECT WALLET</div>
+      <button onclick="closeWalletModal()" style="font-family:'Press Start 2P',monospace;font-size:8px;background:transparent;border:2px solid #555577;color:#555577;padding:4px 8px;cursor:pointer;box-shadow:2px 2px 0 #000;">✕</button>
+    </div>
+    <div id="walletList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div style="margin-top:12px;border-top:2px solid rgba(108,43,217,0.3);padding-top:12px;">
+      <div style="font-family:'VT323',monospace;font-size:13px;color:#555577;text-align:center;margin-bottom:8px;">NO WALLET DETECTED?</div>
+      <a href="https://metamask.io/download/" target="_blank" class="pbtn sm" style="text-decoration:none;display:block;text-align:center;background:transparent;color:#a855f7;border-color:#a855f7;">INSTALL METAMASK →</a>
+    </div>
+  </div>
+</div>
+
 
 <footer>
-  <div class="footer-brand">RIDDLECHAIN v1.0 · BUILT ON GENLAYER</div>
-  <a href="https://github.com/Manablaq/genlayer-puzzle-game" target="_blank" class="footer-link">[ GITHUB ]</a>
-  <a href="https://studio.genlayer.com" target="_blank" class="footer-link">[ STUDIO ]</a>
-  <div class="footer-right">
+  <div class="foot-brand">RIDDLECHAIN v1.0</div>
+  <a href="https://github.com/Manablaq/genlayer-puzzle-game" target="_blank" class="foot-link">[ GITHUB ]</a>
+  <a href="https://studio.genlayer.com" target="_blank" class="foot-link">[ STUDIO ]</a>
+  <div class="foot-right">
     <div class="online-dot"></div>
-    <div class="footer-contract" id="footerContract">CONTRACT: LOADING...</div>
+    <div class="foot-contract" id="footContract">0x23639B...Bf52</div>
   </div>
 </footer>
 
 <script>
-// ═══════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════
-const CONTRACT_ADDRESS = "0x23639B8Be26A46afA4ad6F6A6839Fc6F1324Bf52";
-const GENLAYER_RPC     = "https://studio.genlayer.com:8443/api";
+const CONTRACT = "0x23639B8Be26A46afA4ad6F6A6839Fc6F1324Bf52";
+const RPC      = "https://studio.genlayer.com:8443/api";
 
-// ═══════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════
-let wallet        = null;
-let soloPos       = 0;
-let soloScore     = 0;
-let soloSel       = null;
-let soloQid       = null;
-let currentRoom   = null;
-let roomPos       = 0;
-let roomScore     = 0;
-let roomSel       = null;
-let roomQid       = null;
+let wallet=null,roomCode=null;
+let soloPos=0,soloScore=0,soloSel=null,soloQid=null;
+let roomPos=0,roomScore=0,roomSel=null,roomQid=null;
 
-// ═══════════════════════════════════════
-// NAV
-// ═══════════════════════════════════════
-function showView(name) {
+// ── VIEWS ──
+function show(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   window.scrollTo(0,0);
 }
 
-// ═══════════════════════════════════════
-// WALLET
-// ═══════════════════════════════════════
+// ── WALLET — EIP-6963 MULTI-WALLET SUPPORT ──
+const detectedProviders = new Map();
+
+// Listen for wallets announcing themselves (EIP-6963)
+window.addEventListener('eip6963:announceProvider', (event) => {
+  const { info, provider } = event.detail;
+  detectedProviders.set(info.uuid, { info, provider });
+});
+
+// Request all installed wallets to announce
+window.dispatchEvent(new Event('eip6963:requestProvider'));
+
+// Known wallet icons (emoji fallback since we're pixel art)
+const walletIcons = {
+  'metamask':  '🦊',
+  'rabby':     '🐰',
+  'okx':       '⭕',
+  'coinbase':  '🔵',
+  'trust':     '🛡️',
+  'rainbow':   '🌈',
+  'phantom':   '👻',
+  'brave':     '🦁',
+  'default':   '💼',
+};
+
+function getWalletIcon(name='') {
+  const n = name.toLowerCase();
+  for (const [key, icon] of Object.entries(walletIcons)) {
+    if (n.includes(key)) return icon;
+  }
+  return walletIcons.default;
+}
+
+function openWalletModal() {
+  const modal = document.getElementById('walletModal');
+  const list  = document.getElementById('walletList');
+  modal.style.display = 'flex';
+  list.innerHTML = '';
+
+  // Show EIP-6963 detected wallets
+  if (detectedProviders.size > 0) {
+    detectedProviders.forEach(({ info, provider }) => {
+      const btn = document.createElement('button');
+      btn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;background:#0d0d1a;border:3px solid #333;box-shadow:3px 3px 0 #000;cursor:pointer;width:100%;transition:all .1s;';
+      btn.innerHTML = `
+        <span style="font-size:20px;">${getWalletIcon(info.name)}</span>
+        <span style="font-family:Press Start 2P,monospace;font-size:clamp(6px,1.5vw,7px);color:#e2e2ff;flex:1;text-align:left;">${info.name.toUpperCase()}</span>
+        <span style="font-family:VT323,monospace;font-size:12px;color:#22c55e;">DETECTED</span>
+      `;
+      btn.onmouseenter = () => { btn.style.borderColor='#a855f7'; btn.style.background='#1a1a2e'; };
+      btn.onmouseleave = () => { btn.style.borderColor='#333'; btn.style.background='#0d0d1a'; };
+      btn.onclick = () => connectWithProvider(provider, info.name);
+      list.appendChild(btn);
+    });
+  } else if (window.ethereum) {
+    // Fallback — window.ethereum exists but no EIP-6963
+    const name = window.ethereum.isMetaMask ? 'MetaMask' :
+                 window.ethereum.isRabby    ? 'Rabby'    :
+                 window.ethereum.isOKExWallet ? 'OKX Wallet' :
+                 window.ethereum.isCoinbaseWallet ? 'Coinbase Wallet' :
+                 'Browser Wallet';
+    const btn = document.createElement('button');
+    btn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;background:#0d0d1a;border:3px solid #6c2bd9;box-shadow:3px 3px 0 #000;cursor:pointer;width:100%;';
+    btn.innerHTML = `<span style="font-size:20px;">${getWalletIcon(name)}</span><span style="font-family:Press Start 2P,monospace;font-size:7px;color:#e2e2ff;flex:1;text-align:left;">${name.toUpperCase()}</span>`;
+    btn.onclick = () => connectWithProvider(window.ethereum, name);
+    list.appendChild(btn);
+  } else {
+    list.innerHTML = '<div style="font-family:VT323,monospace;font-size:15px;color:#ef4444;text-align:center;padding:12px;">NO WALLET DETECTED<br>INSTALL ONE BELOW</div>';
+  }
+}
+
+function closeWalletModal() {
+  document.getElementById('walletModal').style.display = 'none';
+}
+
+// Close modal when clicking backdrop
+document.getElementById('walletModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('walletModal')) closeWalletModal();
+});
+
 async function connectWallet() {
-  if (!window.ethereum) { alert('MetaMask not found. Please install MetaMask.'); return; }
+  // Re-request providers in case wallet was just installed
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
+  setTimeout(openWalletModal, 100);
+}
+
+async function connectWithProvider(provider, name) {
   try {
-    const accs = await window.ethereum.request({method:'eth_requestAccounts'});
-    wallet = accs[0];
+    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+    wallet = accounts[0];
+    closeWalletModal();
     const btn = document.getElementById('walletBtn');
-    btn.textContent = '[ ' + wallet.slice(0,6)+'...'+wallet.slice(-4) + ' ]';
+    btn.textContent = '[ ' + wallet.slice(0,6) + '...' + wallet.slice(-4) + ' ]';
     btn.classList.add('connected');
-    ['createWallet','joinWallet','crAuthor'].forEach(id=>{
+    ['createWallet','joinWallet','crWallet'].forEach(id => {
       const el = document.getElementById(id);
-      if(el) el.value = wallet;
+      if (el) el.value = wallet;
     });
-    loadLeaderboard();
-  } catch(e){ console.error(e); }
+    loadLb();
+    // Store active provider for write calls
+    window._activeProvider = provider;
+  } catch(e) {
+    console.error(e);
+  }
 }
 
-// ═══════════════════════════════════════
-// GENLAYER CALLS
-// ═══════════════════════════════════════
-async function glRead(method, args) {
-  try {
-    const r = await fetch(GENLAYER_RPC, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to:CONTRACT_ADDRESS,data:JSON.stringify({method,args})},'latest'],id:Date.now()})
-    });
-    const d = await r.json();
-    return d.result || null;
-  } catch(e){ return null; }
+// ── GL CALLS ──
+async function glRead(method,args){
+  try{
+    const r=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to:CONTRACT,data:JSON.stringify({method,args})},'latest'],id:Date.now()})});
+    const d=await r.json();return d.result||null;
+  }catch(e){return null;}
+}
+async function glWrite(method,args){
+  const provider = window._activeProvider || window.ethereum;
+  if(!provider||!wallet){alert('Connect wallet first.');return null;}
+  try{
+    return await provider.request({method:'eth_sendTransaction',
+      params:[{from:wallet,to:CONTRACT,data:JSON.stringify({method,args}),gas:'0x5208'}]});
+  }catch(e){console.error(e);return null;}
 }
 
-async function glWrite(method, args) {
-  if (!window.ethereum || !wallet) { alert('Connect wallet first.'); return null; }
-  try {
-    return await window.ethereum.request({
-      method:'eth_sendTransaction',
-      params:[{from:wallet,to:CONTRACT_ADDRESS,data:JSON.stringify({method,args}),gas:'0x5208'}]
-    });
-  } catch(e){ console.error(e); return null; }
-}
-
-// ═══════════════════════════════════════
-// PARSE RIDDLE
-// ═══════════════════════════════════════
-function parseRiddle(raw) {
-  if (!raw) return null;
-  const text  = raw.replace(/\\n/g,'\n');
-  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const label = lines[0]||'';
-  const idM   = label.match(/ID:(\d+)/);
-  const posM  = label.match(/QUESTION (\d+)/);
-  let riddle='', opts={}, inOpts=false;
+// ── PARSE ──
+function parse(raw){
+  if(!raw)return null;
+  const lines=raw.replace(/\\n/g,'\n').split('\n').map(l=>l.trim()).filter(Boolean);
+  const label=lines[0]||'';
+  const idM=label.match(/ID:(\d+)/),posM=label.match(/QUESTION (\d+)/);
+  let riddle='',opts={},inO=false;
   for(let i=1;i<lines.length;i++){
     const l=lines[i];
-    if(/^[ABCD]\.\s/.test(l)){ inOpts=true; opts[l[0]]=l.replace(/^[ABCD]\.\s+/,'').trim(); }
-    else if(!inOpts && l && !l.startsWith('Reply')) riddle+=(riddle?' ':'')+l;
+    if(/^[ABCD]\.\s/.test(l)){inO=true;opts[l[0]]=l.replace(/^[ABCD]\.\s+/,'').trim();}
+    else if(!inO&&l&&!l.startsWith('Reply'))riddle+=(riddle?' ':'')+l;
   }
-  return {label,riddle,opts,qId:idM?parseInt(idM[1]):null,pos:posM?parseInt(posM[1]):1};
+  return{label,riddle,opts,qId:idM?parseInt(idM[1]):null,pos:posM?parseInt(posM[1]):1};
 }
 
-function renderRiddle(parsed, boxId, mode) {
-  const box = document.getElementById(boxId);
-  if(!parsed){ box.innerHTML='<div style="padding:20px;font-family:var(--vt);font-size:18px;color:var(--red);">ERROR LOADING RIDDLE</div>'; return; }
-  box.innerHTML = `
-    <div class="riddle-num">QUESTION ${parsed.pos} OF 5 <span class="riddle-qid">ID:${parsed.qId}</span></div>
-    <div class="riddle-text">${parsed.riddle}</div>
-    <div class="options-grid">
+function renderQ(p,boxId,mode){
+  if(!p){document.getElementById(boxId).innerHTML='<div style="padding:16px;font-family:VT323,monospace;font-size:16px;color:#ef4444;">ERROR LOADING RIDDLE</div>';return;}
+  document.getElementById(boxId).innerHTML=`
+    <div class="riddle-meta">QUESTION ${p.pos} OF 5<span class="riddle-qid">ID:${p.qId}</span></div>
+    <div class="riddle-text">${p.riddle}</div>
+    <div class="opts-grid">
       ${['A','B','C','D'].map(l=>`
-        <button class="opt-btn" id="opt-${mode}-${l}" onclick="selectOpt('${mode}','${l}')">
+        <button class="opt-btn" id="o-${mode}-${l}" onclick="pick('${mode}','${l}')">
           <div class="opt-letter">${l}</div>
-          <div class="opt-text">${parsed.opts[l]||''}</div>
-        </button>
-      `).join('')}
-    </div>
-  `;
+          <div class="opt-text">${p.opts[l]||''}</div>
+        </button>`).join('')}
+    </div>`;
 }
 
-function selectOpt(mode, letter) {
-  ['A','B','C','D'].forEach(l => document.getElementById('opt-'+mode+'-'+l)?.classList.remove('selected'));
-  document.getElementById('opt-'+mode+'-'+letter)?.classList.add('selected');
-  if(mode==='solo'){ soloSel=letter; document.getElementById('soloSubmitBtn').disabled=false; document.getElementById('soloHint').textContent='ANSWER: '+letter; }
-  if(mode==='room'){ roomSel=letter; document.getElementById('roomSubmitBtn').disabled=false; }
+function pick(mode,letter){
+  ['A','B','C','D'].forEach(l=>document.getElementById('o-'+mode+'-'+l)?.classList.remove('selected'));
+  document.getElementById('o-'+mode+'-'+letter)?.classList.add('selected');
+  if(mode==='solo'){soloSel=letter;document.getElementById('soloBtn').disabled=false;document.getElementById('soloHint').textContent='ANSWER: '+letter;}
+  if(mode==='room'){roomSel=letter;document.getElementById('roomBtn').disabled=false;}
 }
 
-// ═══════════════════════════════════════
-// SOLO
-// ═══════════════════════════════════════
-async function startSolo() {
-  if(!wallet){ await connectWallet(); if(!wallet) return; }
-  soloPos=0; soloScore=0; soloSel=null;
-  updateHearts('soloHearts',0); updateProgress('soloProgressBar',0);
-  document.getElementById('soloScore').textContent='0/5';
-  document.getElementById('soloPlayerTag').textContent=wallet.slice(0,8)+'...';
-  document.getElementById('soloFeedback').className='feedback-box px-box';
-  showView('solo');
-  loadSoloQ();
+// ── SOLO ──
+const demoQ=[
+  {label:'YOUR SESSION | QUESTION 1 of 5  (ID:1)',riddle:'Validators argue, yet they always agree. I use AI to reach my verdict. I am democratic but optimistic. What consensus mechanism am I?',opts:{A:'Proof of Work',B:'Delegated Proof of Stake',C:'Optimistic Democracy',D:'Byzantine Fault Tolerance'},qId:1,pos:1},
+  {label:'YOUR SESSION | QUESTION 2 of 5  (ID:0)',riddle:'I am not a bank, yet I hold value. I live on a blockchain but speak plain English and think with AI. What am I?',opts:{A:'Smart Oracle',B:'Intelligent Contract',C:'Decentralized Exchange',D:'Blockchain Wallet'},qId:0,pos:2},
+  {label:'YOUR SESSION | QUESTION 3 of 5  (ID:4)',riddle:'GenLayer was once known by another name before rebranding. What was it previously called?',opts:{A:'ChainAI',B:'YeagerAI',C:'SmartLayer',D:'LayerZero'},qId:4,pos:3},
+  {label:'YOUR SESSION | QUESTION 4 of 5  (ID:8)',riddle:'I am the GenLayer function that fetches live data from any public URL. Unlike web.get() I actually return content. What am I?',opts:{A:'web.get()',B:'web.render()',C:'web.fetch()',D:'web.call()'},qId:8,pos:4},
+  {label:'YOUR SESSION | QUESTION 5 of 5  (ID:3)',riddle:'I run inside GenLayer and execute Intelligent Contracts using large language models. What am I?',opts:{A:'Ethereum VM',B:'WebAssembly',C:'Python Interpreter',D:'GenVM'},qId:3,pos:5},
+];
+
+async function startSolo(){
+  if(!wallet){await connectWallet();if(!wallet)return;}
+  soloPos=0;soloScore=0;soloSel=null;
+  resetHearts('soloHearts');setBar('soloBar',0);
+  document.getElementById('soloScoreDisp').textContent='0/5';
+  document.getElementById('soloTag').textContent=wallet.slice(0,8)+'...';
+  document.getElementById('soloFb').className='feedback pbox';
+  document.getElementById('soloTx').className='tx-status pbox';
+  show('solo');loadSoloQ();
 }
 
-async function loadSoloQ() {
-  const box = document.getElementById('soloQuestionBox');
-  box.innerHTML='<div style="text-align:center;padding:20px;font-family:var(--vt);font-size:18px;color:var(--dim);">LOADING<span class="blink">...</span></div>';
-  document.getElementById('soloSubmitBtn').disabled=true;
+async function loadSoloQ(){
+  const box=document.getElementById('soloBox');
+  box.innerHTML='<div style="font-family:VT323,monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">LOADING<span class="blink">...</span></div>';
+  document.getElementById('soloBtn').disabled=true;
   document.getElementById('soloHint').textContent='SELECT AN OPTION';
-  document.getElementById('soloFeedback').className='feedback-box px-box';
+  document.getElementById('soloFb').className='feedback pbox';
   soloSel=null;
-
-  const raw = await glRead('get_my_riddle',[wallet,soloPos]);
-  // Demo fallback
-  const demos=[
-    {label:'YOUR SESSION | QUESTION 1 of 5  (ID:1)',riddle:'Validators argue, yet they always agree. I use AI to reach my verdict but no single mind controls me. I am democratic but optimistic. What consensus mechanism am I?',opts:{A:'Proof of Work',B:'Delegated Proof of Stake',C:'Optimistic Democracy',D:'Byzantine Fault Tolerance'},qId:1,pos:1},
-    {label:'YOUR SESSION | QUESTION 2 of 5  (ID:0)',riddle:'I am not a bank, yet I hold value. I live on a blockchain but speak plain English. I think with AI. What am I?',opts:{A:'Smart Oracle',B:'Intelligent Contract',C:'DEX',D:'Wallet'},qId:0,pos:2},
-    {label:'YOUR SESSION | QUESTION 3 of 5  (ID:4)',riddle:'GenLayer was once known by another name before rebranding. What was GenLayer previously called?',opts:{A:'ChainAI',B:'YeagerAI',C:'SmartLayer',D:'LayerZero'},qId:4,pos:3},
-    {label:'YOUR SESSION | QUESTION 4 of 5  (ID:8)',riddle:'I am the GenLayer function that fetches live data from any public URL. Unlike my broken cousin web.get(), I actually work. What am I?',opts:{A:'web.get()',B:'web.render()',C:'web.fetch()',D:'web.call()'},qId:8,pos:4},
-    {label:'YOUR SESSION | QUESTION 5 of 5  (ID:3)',riddle:'I run inside GenLayer and execute Intelligent Contracts using large language models. What am I?',opts:{A:'Ethereum VM',B:'WebAssembly',C:'Python',D:'GenVM'},qId:3,pos:5},
-  ];
-  const parsed = raw ? parseRiddle(raw) : demos[soloPos % demos.length];
-  if(parsed){ soloQid=parsed.qId; renderRiddle(parsed,'soloQuestionBox','solo'); }
+  const raw=await glRead('get_my_riddle',[wallet,soloPos]);
+  const p=raw?parse(raw):demoQ[soloPos%demoQ.length];
+  if(p){soloQid=p.qId;renderQ(p,'soloBox','solo');}
 }
 
-async function submitSolo() {
-  if(!soloSel||soloQid===null) return;
-  document.getElementById('soloSubmitBtn').disabled=true;
-  document.querySelectorAll('#soloQuestionBox .opt-btn').forEach(b=>b.style.pointerEvents='none');
-  const tx = document.getElementById('soloTx');
-  tx.className='tx-box px-box pending'; tx.style.display='flex';
-
+async function submitSolo(){
+  if(!soloSel||soloQid===null)return;
+  document.getElementById('soloBtn').disabled=true;
+  document.querySelectorAll('#soloBox .opt-btn').forEach(b=>b.style.pointerEvents='none');
+  const tx=document.getElementById('soloTx');
+  tx.className='tx-status pbox pending';
   await glWrite('submit_answer',[wallet,soloQid,soloSel]);
-
   setTimeout(()=>{
-    tx.style.display='none';
-    const correct = Math.random()>0.3; // Demo — replace with real result
-    const fb = document.getElementById('soloFeedback');
-    const hearts = document.getElementById('soloHearts');
-    if(correct){
+    tx.className='tx-status pbox';
+    const ok=Math.random()>0.3;
+    const fb=document.getElementById('soloFb');
+    if(ok){
       soloScore++;
-      fb.className='feedback-box correct px-box';
-      fb.innerHTML='<div class="fb-title">✓ CORRECT!</div><div class="fb-text">YOUR GENLAYER KNOWLEDGE IS REAL. NEXT RIDDLE LOADING...</div>';
-      document.getElementById('opt-solo-'+soloSel)?.classList.add('correct');
-      const heart = hearts.children[soloScore-1];
-      if(heart){heart.classList.remove('empty'); heart.style.color='var(--red)'; heart.style.textShadow='0 0 8px red';}
-    } else {
-      fb.className='feedback-box wrong px-box';
-      fb.innerHTML='<div class="fb-title">✗ WRONG!</div><div class="fb-text">STUDY THE GENLAYER DOCS AND TRY AGAIN, SER.</div>';
-      document.getElementById('opt-solo-'+soloSel)?.classList.add('wrong');
+      fb.className='feedback correct pbox';
+      fb.innerHTML='<div class="fb-title">✓ CORRECT!</div><div class="fb-text">YOUR GENLAYER KNOWLEDGE IS REAL!</div>';
+      document.getElementById('o-solo-'+soloSel)?.classList.add('correct');
+      fillHeart('soloHearts',soloScore-1);
+    }else{
+      fb.className='feedback wrong pbox';
+      fb.innerHTML='<div class="fb-title">✗ WRONG!</div><div class="fb-text">STUDY THE GENLAYER DOCS AND TRY AGAIN!</div>';
+      document.getElementById('o-solo-'+soloSel)?.classList.add('wrong');
     }
-    document.getElementById('soloScore').textContent=soloScore+'/5';
-    updateProgress('soloProgressBar',(soloPos+1)/5*100);
+    document.getElementById('soloScoreDisp').textContent=soloScore+'/5';
+    setBar('soloBar',(soloPos+1)/5*100);
     soloPos++;
-    if(soloPos>=5) setTimeout(()=>soloWin(), 1500);
-    else setTimeout(()=>loadSoloQ(), 1800);
-  }, 2000);
+    if(soloPos>=5)setTimeout(()=>winScreen('soloBox',soloScore,'soloBtn'),1500);
+    else setTimeout(loadSoloQ,1800);
+  },2000);
 }
 
-function soloWin(){
-  document.getElementById('soloQuestionBox').innerHTML=`
-    <div class="win-screen">
-      <div class="win-title">${soloScore>=5?'🏆 LEGENDARY!':soloScore>=3?'⚡ WELL PLAYED!':'📖 KEEP STUDYING!'}</div>
-      <div class="coin-row">🪙🪙🪙🪙🪙</div>
-      <div class="win-score">FINAL SCORE: ${soloScore}/5</div>
-      <button class="px-btn" onclick="startSolo()">▶ PLAY AGAIN</button>
-    </div>
-  `;
-  document.getElementById('soloSubmitBtn').style.display='none';
-}
-
-// ═══════════════════════════════════════
-// CREATE ROOM
-// ═══════════════════════════════════════
+// ── ROOM CREATE ──
 async function createRoom(){
   const w=document.getElementById('createWallet').value.trim();
   if(!w){alert('Enter wallet address.');return;}
   wallet=w;
-  const tx=document.getElementById('createRoomTx');
-  const btn=document.getElementById('createRoomBtn');
-  tx.className='tx-box px-box pending'; tx.style.display='flex';
-  btn.disabled=true;
+  const tx=document.getElementById('createTx');
+  const btn=document.getElementById('createBtn');
+  tx.className='tx-status pbox pending';btn.disabled=true;
   await glWrite('create_room',[w]);
   setTimeout(()=>{
-    tx.style.display='none';
-    const code=genCode(w);
-    currentRoom=code;
+    tx.className='tx-status pbox';
+    const code=genCode(w);roomCode=code;
     document.getElementById('displayCode').textContent=code;
-    document.getElementById('roomCreatedSection').style.display='block';
-    document.getElementById('createdPlayerList').innerHTML=`
-      <div class="player-row">
-        <div class="px-dot"></div>
-        <div class="player-addr">${w.slice(0,10)}...${w.slice(-6)}</div>
-        <div class="px-badge host">HOST</div>
-        <div class="px-badge you">YOU</div>
-      </div>`;
+    document.getElementById('createdSection').style.display='block';
+    document.getElementById('createdPlayers').innerHTML=`
+      <div class="player-row"><div class="p-dot"></div><div class="p-addr">${w.slice(0,10)}...${w.slice(-6)}</div>
+      <div class="badge host">HOST</div><div class="badge you">YOU</div></div>`;
   },2000);
 }
 
 function copyCode(){
-  navigator.clipboard.writeText(document.getElementById('displayCode').textContent);
-  const btn=event.target; btn.textContent='[ COPIED! ]';
+  navigator.clipboard.writeText(document.getElementById('displayCode').textContent).catch(()=>{});
+  const btn=event.target;btn.textContent='[ COPIED! ]';
   setTimeout(()=>btn.textContent='[ COPY CODE ]',2000);
 }
 
-function goToRoomGame(){
-  if(!currentRoom){alert('No room found.');return;}
-  roomPos=0;roomScore=0;roomSel=null;
-  document.getElementById('roomGameTitle').textContent='ROOM: '+currentRoom;
-  document.getElementById('roomCodeTag').textContent=currentRoom;
-  updateHearts('roomHearts',0);
-  updateProgress('roomProgressBar',0);
-  document.getElementById('roomScore').textContent='0/5';
-  document.getElementById('roomFeedback').className='feedback-box px-box';
-  showView('room-game');
-  loadRoomQ();
-}
-
-// ═══════════════════════════════════════
-// JOIN ROOM
-// ═══════════════════════════════════════
+// ── ROOM JOIN ──
 async function joinRoom(){
   const w=document.getElementById('joinWallet').value.trim();
   const c=document.getElementById('joinCode').value.trim().toUpperCase();
   if(!w||!c){alert('Fill both fields.');return;}
-  wallet=w; currentRoom=c;
-  const tx=document.getElementById('joinRoomTx');
-  tx.className='tx-box px-box pending'; tx.style.display='flex';
+  wallet=w;roomCode=c;
+  const tx=document.getElementById('joinTx');
+  tx.className='tx-status pbox pending';
   await glWrite('join_room',[w,c]);
   setTimeout(()=>{
-    tx.style.display='none';
-    const js=document.getElementById('joinedSection');
-    js.style.display='block';
-    document.getElementById('joinedMsg').innerHTML='<div class="fb-title">✓ JOINED ROOM '+c+'</div><div class="fb-text">READY TO PLAY. PRESS START!</div>';
+    tx.className='tx-status pbox';
+    document.getElementById('joinedSection').style.display='block';
+    const msg=document.getElementById('joinedMsg');
+    msg.innerHTML='<div class="fb-title">✓ JOINED ROOM '+c+'</div><div class="fb-text">READY TO PLAY!</div>';
   },2000);
 }
 
-// ═══════════════════════════════════════
-// ROOM GAME
-// ═══════════════════════════════════════
+function goPlay(){
+  if(!roomCode){alert('No room code.');return;}
+  roomPos=0;roomScore=0;roomSel=null;
+  resetHearts('roomHearts');setBar('roomBar',0);
+  document.getElementById('roomScoreDisp').textContent='0/5';
+  document.getElementById('roomTitle').textContent='ROOM GAME';
+  document.getElementById('roomTag').textContent=roomCode;
+  document.getElementById('roomFb').className='feedback pbox';
+  document.getElementById('roomTx').className='tx-status pbox';
+  show('room-game');loadRoomQ();
+}
+
+// ── ROOM GAME ──
 async function loadRoomQ(){
-  const box=document.getElementById('roomQuestionBox');
-  box.innerHTML='<div style="text-align:center;padding:20px;font-family:var(--vt);font-size:18px;color:var(--dim);">LOADING<span class="blink">...</span></div>';
-  document.getElementById('roomSubmitBtn').disabled=true;
-  document.getElementById('roomFeedback').className='feedback-box px-box';
+  const box=document.getElementById('roomBox');
+  box.innerHTML='<div style="font-family:VT323,monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">LOADING<span class="blink">...</span></div>';
+  document.getElementById('roomBtn').disabled=true;
+  document.getElementById('roomFb').className='feedback pbox';
   roomSel=null;
-  const raw=await glRead('get_room_riddle',[wallet,currentRoom,roomPos]);
-  const demo={label:`ROOM ${currentRoom} | QUESTION ${roomPos+1} of 5  (ID:3)`,riddle:'I run inside GenLayer. I execute Intelligent Contracts using large language models. What am I?',opts:{A:'Ethereum VM',B:'WebAssembly',C:'Python',D:'GenVM'},qId:3,pos:roomPos+1};
-  const parsed=raw?parseRiddle(raw):demo;
-  if(parsed){roomQid=parsed.qId; renderRiddle(parsed,'roomQuestionBox','room');}
+  const raw=await glRead('get_room_riddle',[wallet,roomCode,roomPos]);
+  const demo={label:`ROOM ${roomCode} | QUESTION ${roomPos+1} of 5  (ID:3)`,riddle:'I run inside GenLayer. I execute Intelligent Contracts using large language models. What am I?',opts:{A:'Ethereum VM',B:'WebAssembly',C:'Python',D:'GenVM'},qId:3,pos:roomPos+1};
+  const p=raw?parse(raw):demo;
+  if(p){roomQid=p.qId;renderQ(p,'roomBox','room');}
   loadRoomLb();
 }
 
 async function submitRoom(){
-  if(!roomSel||roomQid===null) return;
-  document.getElementById('roomSubmitBtn').disabled=true;
-  document.querySelectorAll('#roomQuestionBox .opt-btn').forEach(b=>b.style.pointerEvents='none');
+  if(!roomSel||roomQid===null)return;
+  document.getElementById('roomBtn').disabled=true;
+  document.querySelectorAll('#roomBox .opt-btn').forEach(b=>b.style.pointerEvents='none');
   const tx=document.getElementById('roomTx');
-  tx.className='tx-box px-box pending'; tx.style.display='flex';
-  await glWrite('submit_room_answer',[wallet,currentRoom,roomQid,roomSel]);
+  tx.className='tx-status pbox pending';
+  await glWrite('submit_room_answer',[wallet,roomCode,roomQid,roomSel]);
   setTimeout(()=>{
-    tx.style.display='none';
-    const correct=Math.random()>0.3;
-    const fb=document.getElementById('roomFeedback');
-    if(correct){
+    tx.className='tx-status pbox';
+    const ok=Math.random()>0.3;
+    const fb=document.getElementById('roomFb');
+    if(ok){
       roomScore++;
-      fb.className='feedback-box correct px-box';
+      fb.className='feedback correct pbox';
       fb.innerHTML='<div class="fb-title">✓ CORRECT!</div><div class="fb-text">ROOM SCORE UPDATED!</div>';
-      document.getElementById('opt-room-'+roomSel)?.classList.add('correct');
-      const heart=document.getElementById('roomHearts').children[roomScore-1];
-      if(heart){heart.classList.remove('empty');heart.style.color='var(--red)';}
-    } else {
-      fb.className='feedback-box wrong px-box';
-      fb.innerHTML='<div class="fb-title">✗ WRONG!</div><div class="fb-text">TRY THE NEXT RIDDLE!</div>';
-      document.getElementById('opt-room-'+roomSel)?.classList.add('wrong');
+      document.getElementById('o-room-'+roomSel)?.classList.add('correct');
+      fillHeart('roomHearts',roomScore-1);
+    }else{
+      fb.className='feedback wrong pbox';
+      fb.innerHTML='<div class="fb-title">✗ WRONG!</div><div class="fb-text">TRY YOUR NEXT RIDDLE!</div>';
+      document.getElementById('o-room-'+roomSel)?.classList.add('wrong');
     }
-    document.getElementById('roomScore').textContent=roomScore+'/5';
-    updateProgress('roomProgressBar',(roomPos+1)/5*100);
+    document.getElementById('roomScoreDisp').textContent=roomScore+'/5';
+    setBar('roomBar',(roomPos+1)/5*100);
     roomPos++;
-    if(roomPos>=5) setTimeout(()=>roomWin(),1500);
-    else setTimeout(()=>loadRoomQ(),1800);
+    if(roomPos>=5)setTimeout(()=>winScreen('roomBox',roomScore,'roomBtn'),1500);
+    else setTimeout(loadRoomQ,1800);
     loadRoomLb();
   },2000);
 }
 
-function roomWin(){
-  document.getElementById('roomQuestionBox').innerHTML=`
-    <div class="win-screen">
-      <div class="win-title">${roomScore>=5?'🏆 LEGENDARY!':roomScore>=3?'⚡ WELL PLAYED!':'📖 KEEP LEARNING!'}</div>
-      <div class="coin-row">⭐⭐⭐⭐⭐</div>
-      <div class="win-score">ROOM SCORE: ${roomScore}/5</div>
-      <button class="px-btn" onclick="showView('home')">▶ BACK TO HOME</button>
-    </div>
-  `;
-  document.getElementById('roomSubmitBtn').style.display='none';
-}
-
 async function loadRoomLb(){
-  const raw=await glRead('get_room_scores',[currentRoom]);
-  const lb=document.getElementById('roomLbContainer');
-  lb.innerHTML=`
+  const raw=await glRead('get_room_scores',[roomCode]);
+  document.getElementById('roomLb').innerHTML=`
     <div class="lb-row">
       <div class="lb-rank r1">1</div>
-      <div class="lb-addr">${wallet?wallet.slice(0,12)+'...':'YOU'}</div>
-      <div class="lb-score">${roomScore}<span class="lb-pts">PTS</span></div>
+      <div class="lb-addr">${wallet?wallet.slice(0,14)+'...':'YOU'}</div>
+      <div class="lb-score">${roomScore} PTS</div>
     </div>`;
 }
 
-// ═══════════════════════════════════════
-// CUSTOM RIDDLE
-// ═══════════════════════════════════════
-async function addCustomRiddle(){
-  const author=document.getElementById('crAuthor').value.trim();
+// ── CUSTOM RIDDLE ──
+async function addRiddle(){
+  const author=document.getElementById('crWallet').value.trim();
   const riddle=document.getElementById('crRiddle').value.trim();
   const a=document.getElementById('crA').value.trim();
   const b=document.getElementById('crB').value.trim();
@@ -1334,71 +1016,84 @@ async function addCustomRiddle(){
   const letter=document.getElementById('crLetter').value.trim().toUpperCase();
   const answer=document.getElementById('crAnswer').value.trim().toLowerCase();
   if(!author||!riddle||!a||!b||!c||!d||!letter||!answer){alert('FILL IN ALL FIELDS!');return;}
-  if(!['A','B','C','D'].includes(letter)){alert('CORRECT LETTER MUST BE A, B, C OR D');return;}
+  if(!['A','B','C','D'].includes(letter)){alert('LETTER MUST BE A, B, C OR D');return;}
   const tx=document.getElementById('crTx');
-  tx.className='tx-box px-box pending'; tx.style.display='flex';
+  tx.className='tx-status pbox pending';
   await glWrite('add_custom_riddle',[author,riddle,a,b,c,d,letter,answer]);
   setTimeout(()=>{
-    tx.style.display='none';
-    const s=document.getElementById('crSuccess');
-    s.classList.add('show');
-    document.getElementById('crSuccessMsg').textContent='YOUR RIDDLE HAS BEEN ADDED! CREATE A CUSTOM ROOM TO CHALLENGE FRIENDS.';
+    tx.className='tx-status pbox';
+    document.getElementById('crSuccess').style.display='block';
+    document.getElementById('crSuccessMsg').textContent='RIDDLE ADDED! CREATE A CUSTOM ROOM TO CHALLENGE FRIENDS.';
   },2000);
 }
 
-// ═══════════════════════════════════════
-// LEADERBOARD
-// ═══════════════════════════════════════
-async function loadLeaderboard(){
+// ── LEADERBOARD ──
+async function loadLb(){
   const raw=await glRead('get_all_scores',[]);
-  const lb=document.getElementById('lbContainer');
+  const lb=document.getElementById('lbBox');
   lb.innerHTML=`
     <div class="lb-row">
       <div class="lb-rank r1">1</div>
-      <div class="lb-addr">${wallet?wallet.slice(0,14)+'...':'0x????'}</div>
-      <div class="lb-score">0<span class="lb-pts"> PTS</span></div>
+      <div class="lb-addr">${wallet?wallet.slice(0,16)+'...':'0x????'}</div>
+      <div class="lb-score">0 PTS</div>
     </div>
     <div class="lb-row" style="justify-content:center;">
-      <div style="font-family:var(--vt);font-size:15px;color:var(--dim);">PLAY TO CLAIM THE TOP SPOT!</div>
+      <div style="font-family:'VT323',monospace;font-size:14px;color:#555577;">PLAY TO CLAIM THE TOP SPOT!</div>
     </div>`;
 }
 
-// ═══════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════
-function updateHearts(id, count){
-  const hearts=document.getElementById(id).children;
-  for(let i=0;i<5;i++){
-    if(i<count){ hearts[i].classList.remove('empty'); hearts[i].style.color='var(--red)'; }
-    else { hearts[i].classList.add('empty'); hearts[i].style.color=''; }
-  }
+// ── HELPERS ──
+function winScreen(boxId,score,btnId){
+  document.getElementById(boxId).innerHTML=`
+    <div class="win-screen">
+      <div class="win-title">${score>=5?'🏆 LEGENDARY!':score>=3?'⚡ WELL PLAYED!':'📖 KEEP STUDYING!'}</div>
+      <div class="coin-row">🪙🪙🪙🪙🪙</div>
+      <div class="win-score">SCORE: ${score}/5</div>
+      <button class="pbtn sm" onclick="show('home')" style="width:auto;">▶ HOME</button>
+    </div>`;
+  document.getElementById(btnId).style.display='none';
 }
-function updateProgress(id, pct){ document.getElementById(id).style.width=pct+'%'; }
+function resetHearts(id){
+  Array.from(document.getElementById(id).children).forEach(h=>{h.classList.add('empty');h.style.cssText='';});
+}
+function fillHeart(id,idx){
+  const h=document.getElementById(id).children[idx];
+  if(h){h.classList.remove('empty');h.style.color='#ef4444';h.style.textShadow='0 0 6px rgba(239,68,68,0.5)';}
+}
+function setBar(id,pct){document.getElementById(id).style.width=pct+'%';}
 function genCode(addr){
   const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let seed=0;
-  for(let c of addr.replace('0x','')) seed=seed*31+c.charCodeAt(0);
+  for(let c of addr.replace('0x',''))seed=seed*31+c.charCodeAt(0);
   let code='';
   for(let i=0;i<6;i++){seed=(seed*1103515245+12345)&0x7fffffff;code+=chars[seed%chars.length];}
   return code;
 }
 
-// ═══════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('footerContract').textContent='CONTRACT: 0x23639B...Bf52';
-  if(window.ethereum){
-    window.ethereum.request({method:'eth_accounts'}).then(accs=>{
-      if(accs.length){
-        wallet=accs[0];
+// ── INIT ──
+window.addEventListener('DOMContentLoaded',()=>{
+  // Check if already connected via any provider
+  const checkConnected = (provider) => {
+    provider.request({method:'eth_accounts'}).then(a=>{
+      if(a.length){
+        wallet=a[0];
+        window._activeProvider = provider;
         const btn=document.getElementById('walletBtn');
         btn.textContent='[ '+wallet.slice(0,6)+'...'+wallet.slice(-4)+' ]';
         btn.classList.add('connected');
-        loadLeaderboard();
+        loadLb();
       }
-    });
-  }
+    }).catch(()=>{});
+  };
+
+  // Check EIP-6963 providers first
+  setTimeout(()=>{
+    if(detectedProviders.size>0){
+      detectedProviders.forEach(({provider})=>checkConnected(provider));
+    } else if(window.ethereum){
+      checkConnected(window.ethereum);
+    }
+  },200);
 });
 </script>
 </body>
