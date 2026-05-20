@@ -71,17 +71,6 @@ nav{
 }
 .nav-logo span{color:#a855f7;}
 .nav-sp{flex:1;}
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(6px,2vw,8px);
-  padding:6px 10px;
-  border:2px solid #a855f7;
-  background:#0d0d1a;
-  color:#a855f7;
-  cursor:pointer;
-  box-shadow:2px 2px 0 #000;
-  white-space:nowrap;
-  flex-shrink:0;
-}
 
 /* ── VIEWS ── */
 .view{display:none;position:relative;z-index:1;}
@@ -469,7 +458,7 @@ footer{
 <div class="page">
   <div style="font-family:'VT323',monospace;font-size:13px;color:#facc15;background:rgba(250,204,21,0.06);border:2px solid rgba(250,204,21,0.2);padding:8px 12px;margin-bottom:12px;line-height:1.6;">
     ⚠ ANSWERS ARE SUBMITTED VIA GENLAYER STUDIO.<br>
-    <a href="https://studio.genlayer.com" target="_blank" style="color:#facc15;">OPEN STUDIO →</a> USE CONTRACT: <span style="color:#a855f7;">0x23639B...Bf52</span>
+    <a href="https://studio.genlayer.com" target="_blank" style="color:#facc15;">OPEN STUDIO →</a> USE CONTRACT: <span style="color:#a855f7;">0x27Fb...A148</span>
   </div>
 
   <div class="game-hdr">
@@ -514,10 +503,6 @@ footer{
     <strong>HOW IT WORKS</strong>
     Create a room → get a code → share with friends → each player gets their own shuffled riddles → first to 5 wins!
   </div>
-  <div class="input-grp">
-    <label class="px-label">YOUR WALLET ADDRESS</label>
-    <input class="px-input" id="createWallet" placeholder="0x..." />
-  </div>
   <div class="tx-status pbox" id="createTx"><div class="spinner"></div><span>CREATING ROOM ON GENLAYER...</span></div>
   <button class="pbtn" id="createBtn" onclick="createRoom()">▶ CREATE ROOM</button>
 
@@ -543,10 +528,6 @@ footer{
   <div class="game-hdr">
     <button class="back-btn" onclick="show('home')">◀ BACK</button>
     <div class="game-title">🎮 JOIN ROOM</div>
-  </div>
-  <div class="input-grp">
-    <label class="px-label">YOUR WALLET ADDRESS</label>
-    <input class="px-input" id="joinWallet" placeholder="0x..." />
   </div>
   <div class="input-grp">
     <label class="px-label">ROOM CODE</label>
@@ -606,10 +587,6 @@ footer{
     Write it, submit on-chain, then create a custom room to challenge friends with your questions.
   </div>
   <div class="input-grp">
-    <label class="px-label">YOUR WALLET</label>
-    <input class="px-input" id="crWallet" placeholder="0x..." />
-  </div>
-  <div class="input-grp">
     <label class="px-label">YOUR RIDDLE QUESTION</label>
     <textarea class="px-input" id="crRiddle" placeholder="Write your riddle here..."></textarea>
   </div>
@@ -643,12 +620,12 @@ footer{
   <a href="https://studio.genlayer.com" target="_blank" class="foot-link">[ STUDIO ]</a>
   <div class="foot-right">
     <div class="online-dot"></div>
-    <div class="foot-contract" id="footContract">0x23639B...Bf52</div>
+    <div class="foot-contract" id="footContract">0x27Fb...A148</div>
   </div>
 </footer>
 
 <script>
-const CONTRACT = "0x23639B8Be26A46afA4ad6F6A6839Fc6F1324Bf52";
+const CONTRACT = "0x27Fb0B472dBFFBbcb0774b81022f6c1900BBA148";
 const RPC      = "https://studio.genlayer.com:8443/api";
 
 let roomCode=null;
@@ -828,10 +805,8 @@ async function submitSolo(){
 
 // ── ROOM CREATE ──
 async function createRoom(){
-  const w=document.getElementById('createWallet').value.trim();
-  if(!w){alert('Enter wallet address.');return;}
-  wallet=w;
-  const tx=document.getElementById('createTx');
+  const w = getPlayer();
+  roomCode = genCode(w);
   const btn=document.getElementById('createBtn');
   tx.className='tx-status pbox pending';btn.disabled=true;
   await glWrite('create_room',[w]);
@@ -854,10 +829,10 @@ function copyCode(){
 
 // ── ROOM JOIN ──
 async function joinRoom(){
-  const w=document.getElementById('joinWallet').value.trim();
+  const w=getPlayer();
   const c=document.getElementById('joinCode').value.trim().toUpperCase();
-  if(!w||!c){alert('Fill both fields.');return;}
-  wallet=w;roomCode=c;
+  if(!c){alert('Enter the room code.');return;}
+  roomCode=c;
   const tx=document.getElementById('joinTx');
   tx.className='tx-status pbox pending';
   await glWrite('join_room',[w,c]);
@@ -938,7 +913,7 @@ async function loadRoomLb(){
 
 // ── CUSTOM RIDDLE ──
 async function addRiddle(){
-  const author=document.getElementById('crWallet').value.trim();
+  const author=getPlayer();
   const riddle=document.getElementById('crRiddle').value.trim();
   const a=document.getElementById('crA').value.trim();
   const b=document.getElementById('crB').value.trim();
