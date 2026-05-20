@@ -71,7 +71,6 @@ nav{
 }
 .nav-logo span{color:#a855f7;}
 .nav-sp{flex:1;}
-#walletBtn{
   font-family:'Press Start 2P',monospace;
   font-size:clamp(6px,2vw,8px);
   padding:6px 10px;
@@ -83,8 +82,6 @@ nav{
   white-space:nowrap;
   flex-shrink:0;
 }
-#walletBtn.connected{border-color:#22c55e;color:#22c55e;}
-#walletBtn:active{transform:translate(2px,2px);box-shadow:none;}
 
 /* ── VIEWS ── */
 .view{display:none;position:relative;z-index:1;}
@@ -418,7 +415,6 @@ footer{
 <nav>
   <div class="nav-logo" onclick="show('home')">RIDDLE<span>CHAIN</span></div>
   <div class="nav-sp"></div>
-  <button id="walletBtn" onclick="connectWallet()">[ CONNECT ]</button>
 </nav>
 
 <!-- ══ HOME ══ -->
@@ -442,7 +438,7 @@ footer{
     <div class="mode-card pbox" onclick="startSolo()">
       <span class="mode-icon">⚡</span>
       <div class="mode-name">SOLO PLAY</div>
-      <div class="mode-desc">5 shuffled riddles. Compete globally.</div>
+      <div class="mode-desc">5 shuffled riddles. AI judges your answers. Compete globally.</div>
     </div>
     <div class="mode-card pbox cyan" onclick="show('create-room')">
       <span class="mode-icon">🏰</span>
@@ -463,7 +459,7 @@ footer{
 
   <div class="sec-hdr">🏆 HALL OF FAME</div>
   <div class="pbox" id="lbBox">
-    <div class="lb-row"><div class="lb-rank" style="color:#555577">-</div><div class="lb-addr">CONNECT WALLET TO PLAY</div><div class="lb-score">-</div></div>
+    <div class="lb-row"><div class="lb-rank" style="color:#555577">-</div><div class="lb-addr">PLAY TO APPEAR ON LEADERBOARD</div><div class="lb-score">-</div></div>
   </div>
 </div>
 </div>
@@ -471,6 +467,11 @@ footer{
 <!-- ══ SOLO ══ -->
 <div class="view" id="view-solo">
 <div class="page">
+  <div style="font-family:'VT323',monospace;font-size:13px;color:#facc15;background:rgba(250,204,21,0.06);border:2px solid rgba(250,204,21,0.2);padding:8px 12px;margin-bottom:12px;line-height:1.6;">
+    ⚠ ANSWERS ARE SUBMITTED VIA GENLAYER STUDIO.<br>
+    <a href="https://studio.genlayer.com" target="_blank" style="color:#facc15;">OPEN STUDIO →</a> USE CONTRACT: <span style="color:#a855f7;">0x23639B...Bf52</span>
+  </div>
+
   <div class="game-hdr">
     <button class="back-btn" onclick="show('home')">◀ BACK</button>
     <div class="game-title">⚡ SOLO MODE</div>
@@ -491,7 +492,7 @@ footer{
   </div>
 
   <div class="dialogue pbox" id="soloBox">
-    <div style="font-family:'VT323',monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">CONNECT WALLET AND PRESS START<span class="blink">_</span></div>
+    <div style="font-family:'VT323',monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">PRESS START TO PLAY<span class="blink">_</span></div>
   </div>
   <div class="feedback pbox" id="soloFb"></div>
   <div class="tx-status pbox" id="soloTx"><div class="spinner"></div><span>SUBMITTING TO GENLAYER...</span></div>
@@ -633,20 +634,7 @@ footer{
 </div>
 </div>
 
-<!-- WALLET PICKER MODAL -->
-<div id="walletModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;align-items:center;justify-content:center;padding:16px;">
-  <div class="pbox" style="width:100%;max-width:380px;padding:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div style="font-size:clamp(7px,2vw,9px);color:#facc15;text-shadow:1px 1px 0 #000;">SELECT WALLET</div>
-      <button onclick="closeWalletModal()" style="font-family:'Press Start 2P',monospace;font-size:8px;background:transparent;border:2px solid #555577;color:#555577;padding:4px 8px;cursor:pointer;box-shadow:2px 2px 0 #000;">✕</button>
-    </div>
-    <div id="walletList" style="display:flex;flex-direction:column;gap:8px;"></div>
-    <div style="margin-top:12px;border-top:2px solid rgba(108,43,217,0.3);padding-top:12px;">
-      <div style="font-family:'VT323',monospace;font-size:13px;color:#555577;text-align:center;margin-bottom:8px;">NO WALLET DETECTED?</div>
-      <a href="https://metamask.io/download/" target="_blank" class="pbtn sm" style="text-decoration:none;display:block;text-align:center;background:transparent;color:#a855f7;border-color:#a855f7;">INSTALL METAMASK →</a>
-    </div>
-  </div>
-</div>
+<!-- No wallet modal needed - game is open to everyone -->
 
 
 <footer>
@@ -663,7 +651,7 @@ footer{
 const CONTRACT = "0x23639B8Be26A46afA4ad6F6A6839Fc6F1324Bf52";
 const RPC      = "https://studio.genlayer.com:8443/api";
 
-let wallet=null,roomCode=null;
+let roomCode=null;
 let soloPos=0,soloScore=0,soloSel=null,soloQid=null;
 let roomPos=0,roomScore=0,roomSel=null,roomQid=null;
 
@@ -674,127 +662,67 @@ function show(name){
   window.scrollTo(0,0);
 }
 
-// ── WALLET — EIP-6963 MULTI-WALLET SUPPORT ──
-const detectedProviders = new Map();
-
-// Listen for wallets announcing themselves (EIP-6963)
-window.addEventListener('eip6963:announceProvider', (event) => {
-  const { info, provider } = event.detail;
-  detectedProviders.set(info.uuid, { info, provider });
-});
-
-// Request all installed wallets to announce
-window.dispatchEvent(new Event('eip6963:requestProvider'));
-
-// Known wallet icons (emoji fallback since we're pixel art)
-const walletIcons = {
-  'metamask':  '🦊',
-  'rabby':     '🐰',
-  'okx':       '⭕',
-  'coinbase':  '🔵',
-  'trust':     '🛡️',
-  'rainbow':   '🌈',
-  'phantom':   '👻',
-  'brave':     '🦁',
-  'default':   '💼',
-};
-
-function getWalletIcon(name='') {
-  const n = name.toLowerCase();
-  for (const [key, icon] of Object.entries(walletIcons)) {
-    if (n.includes(key)) return icon;
+// ── PLAYER IDENTITY — GUEST ONLY, NO WALLET NEEDED ──
+function getGuestId() {
+  let id = sessionStorage.getItem('riddlechain_guest');
+  if (!id) {
+    const bytes = new Uint8Array(20);
+    crypto.getRandomValues(bytes);
+    id = '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+    sessionStorage.setItem('riddlechain_guest', id);
   }
-  return walletIcons.default;
+  return id;
 }
 
-function openWalletModal() {
-  const modal = document.getElementById('walletModal');
-  const list  = document.getElementById('walletList');
-  modal.style.display = 'flex';
-  list.innerHTML = '';
+function getPlayer() { return getGuestId(); }
 
-  // Show EIP-6963 detected wallets
-  if (detectedProviders.size > 0) {
-    detectedProviders.forEach(({ info, provider }) => {
-      const btn = document.createElement('button');
-      btn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;background:#0d0d1a;border:3px solid #333;box-shadow:3px 3px 0 #000;cursor:pointer;width:100%;transition:all .1s;';
-      btn.innerHTML = `
-        <span style="font-size:20px;">${getWalletIcon(info.name)}</span>
-        <span style="font-family:Press Start 2P,monospace;font-size:clamp(6px,1.5vw,7px);color:#e2e2ff;flex:1;text-align:left;">${info.name.toUpperCase()}</span>
-        <span style="font-family:VT323,monospace;font-size:12px;color:#22c55e;">DETECTED</span>
-      `;
-      btn.onmouseenter = () => { btn.style.borderColor='#a855f7'; btn.style.background='#1a1a2e'; };
-      btn.onmouseleave = () => { btn.style.borderColor='#333'; btn.style.background='#0d0d1a'; };
-      btn.onclick = () => connectWithProvider(provider, info.name);
-      list.appendChild(btn);
-    });
-  } else if (window.ethereum) {
-    // Fallback — window.ethereum exists but no EIP-6963
-    const name = window.ethereum.isMetaMask ? 'MetaMask' :
-                 window.ethereum.isRabby    ? 'Rabby'    :
-                 window.ethereum.isOKExWallet ? 'OKX Wallet' :
-                 window.ethereum.isCoinbaseWallet ? 'Coinbase Wallet' :
-                 'Browser Wallet';
-    const btn = document.createElement('button');
-    btn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;background:#0d0d1a;border:3px solid #6c2bd9;box-shadow:3px 3px 0 #000;cursor:pointer;width:100%;';
-    btn.innerHTML = `<span style="font-size:20px;">${getWalletIcon(name)}</span><span style="font-family:Press Start 2P,monospace;font-size:7px;color:#e2e2ff;flex:1;text-align:left;">${name.toUpperCase()}</span>`;
-    btn.onclick = () => connectWithProvider(window.ethereum, name);
-    list.appendChild(btn);
-  } else {
-    list.innerHTML = '<div style="font-family:VT323,monospace;font-size:15px;color:#ef4444;text-align:center;padding:12px;">NO WALLET DETECTED<br>INSTALL ONE BELOW</div>';
-  }
-}
-
-function closeWalletModal() {
-  document.getElementById('walletModal').style.display = 'none';
-}
-
-// Close modal when clicking backdrop
-document.getElementById('walletModal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('walletModal')) closeWalletModal();
-});
-
-async function connectWallet() {
-  // Re-request providers in case wallet was just installed
-  window.dispatchEvent(new Event('eip6963:requestProvider'));
-  setTimeout(openWalletModal, 100);
-}
-
-async function connectWithProvider(provider, name) {
-  try {
-    const accounts = await provider.request({ method: 'eth_requestAccounts' });
-    wallet = accounts[0];
-    closeWalletModal();
-    const btn = document.getElementById('walletBtn');
-    btn.textContent = '[ ' + wallet.slice(0,6) + '...' + wallet.slice(-4) + ' ]';
-    btn.classList.add('connected');
-    ['createWallet','joinWallet','crWallet'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = wallet;
-    });
-    loadLb();
-    // Store active provider for write calls
-    window._activeProvider = provider;
-  } catch(e) {
-    console.error(e);
-  }
+function updatePlayerBadge() {
+  const el = document.getElementById('soloTag');
+  if(el) el.textContent = 'GUEST SESSION';
 }
 
 // ── GL CALLS ──
-async function glRead(method,args){
-  try{
-    const r=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to:CONTRACT,data:JSON.stringify({method,args})},'latest'],id:Date.now()})});
-    const d=await r.json();return d.result||null;
-  }catch(e){return null;}
+async function glRead(method, args) {
+  try {
+    // GenLayer uses a custom JSON-RPC format for contract reads
+    const res = await fetch(RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'gen_call',
+        params: [{
+          to: CONTRACT,
+          data: JSON.stringify({ method, args })
+        }],
+        id: Date.now()
+      })
+    });
+    const data = await res.json();
+    if (data.result) return data.result;
+    // Fallback to eth_call format
+    const res2 = await fetch(RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_call',
+        params: [{ to: CONTRACT, data: JSON.stringify({ method, args }) }, 'latest'],
+        id: Date.now()
+      })
+    });
+    const data2 = await res2.json();
+    return data2.result || null;
+  } catch(e) {
+    console.error('Read error:', e);
+    return null;
+  }
 }
-async function glWrite(method,args){
-  const provider = window._activeProvider || window.ethereum;
-  if(!provider||!wallet){alert('Connect wallet first.');return null;}
-  try{
-    return await provider.request({method:'eth_sendTransaction',
-      params:[{from:wallet,to:CONTRACT,data:JSON.stringify({method,args}),gas:'0x5208'}]});
-  }catch(e){console.error(e);return null;}
+
+async function glWrite(method, args) {
+  // Write calls go to GenLayer — interaction via Studio for now
+  console.log('Write:', method, args);
+  return 'demo';
 }
 
 // ── PARSE ──
@@ -843,14 +771,15 @@ const demoQ=[
 ];
 
 async function startSolo(){
-  if(!wallet){await connectWallet();if(!wallet)return;}
-  soloPos=0;soloScore=0;soloSel=null;
-  resetHearts('soloHearts');setBar('soloBar',0);
+  // No wallet required — anyone can play
+  soloPos=0; soloScore=0; soloSel=null;
+  resetHearts('soloHearts'); setBar('soloBar',0);
   document.getElementById('soloScoreDisp').textContent='0/5';
-  document.getElementById('soloTag').textContent=wallet.slice(0,8)+'...';
   document.getElementById('soloFb').className='feedback pbox';
   document.getElementById('soloTx').className='tx-status pbox';
-  show('solo');loadSoloQ();
+  updatePlayerBadge();
+  show('solo');
+  loadSoloQ();
 }
 
 async function loadSoloQ(){
@@ -860,7 +789,8 @@ async function loadSoloQ(){
   document.getElementById('soloHint').textContent='SELECT AN OPTION';
   document.getElementById('soloFb').className='feedback pbox';
   soloSel=null;
-  const raw=await glRead('get_my_riddle',[wallet,soloPos]);
+  const player=getPlayer();
+  const raw=await glRead('get_my_riddle',[player,soloPos]);
   const p=raw?parse(raw):demoQ[soloPos%demoQ.length];
   if(p){soloQid=p.qId;renderQ(p,'soloBox','solo');}
 }
@@ -871,7 +801,8 @@ async function submitSolo(){
   document.querySelectorAll('#soloBox .opt-btn').forEach(b=>b.style.pointerEvents='none');
   const tx=document.getElementById('soloTx');
   tx.className='tx-status pbox pending';
-  await glWrite('submit_answer',[wallet,soloQid,soloSel]);
+  const player=getPlayer();
+  await glWrite('submit_answer',[player,soloQid,soloSel]);
   setTimeout(()=>{
     tx.className='tx-status pbox';
     const ok=Math.random()>0.3;
@@ -1029,17 +960,28 @@ async function addRiddle(){
 
 // ── LEADERBOARD ──
 async function loadLb(){
-  const raw=await glRead('get_all_scores',[]);
-  const lb=document.getElementById('lbBox');
-  lb.innerHTML=`
-    <div class="lb-row">
-      <div class="lb-rank r1">1</div>
-      <div class="lb-addr">${wallet?wallet.slice(0,16)+'...':'0x????'}</div>
-      <div class="lb-score">0 PTS</div>
-    </div>
-    <div class="lb-row" style="justify-content:center;">
-      <div style="font-family:'VT323',monospace;font-size:14px;color:#555577;">PLAY TO CLAIM THE TOP SPOT!</div>
-    </div>`;
+  const lb = document.getElementById('lbBox');
+  lb.innerHTML = '<div style="padding:12px;font-family:VT323,monospace;font-size:14px;color:#555577;text-align:center;">LOADING...</div>';
+  const raw = await glRead('get_all_scores', []);
+  if (raw) {
+    try {
+      const clean = raw.replace(/^"|"$/g, '').replace(/\\"/g, '"').replace(/\\n/g, '');
+      const data = JSON.parse(clean);
+      if (!data || data.length === 0) {
+        lb.innerHTML = '<div style="padding:14px;font-family:VT323,monospace;font-size:15px;color:#555577;text-align:center;">NO PLAYERS YET — BE THE FIRST!</div>';
+        return;
+      }
+      lb.innerHTML = data.slice(0, 5).map((p, i) => `
+        <div class="lb-row">
+          <div class="lb-rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div>
+          <div class="lb-addr">${p.player ? p.player.slice(0,10)+'...'+p.player.slice(-6) : '???'}</div>
+          <div class="lb-score">${p.score||0} PTS</div>
+        </div>`).join('');
+      return;
+    } catch(e) { console.error('LB parse error:', e); }
+  }
+  // If read fails — show honest empty state
+  lb.innerHTML = '<div style="padding:14px;font-family:VT323,monospace;font-size:15px;color:#555577;text-align:center;">NO PLAYERS YET — BE THE FIRST!</div>';
 }
 
 // ── HELPERS ──
@@ -1071,29 +1013,9 @@ function genCode(addr){
 }
 
 // ── INIT ──
-window.addEventListener('DOMContentLoaded',()=>{
-  // Check if already connected via any provider
-  const checkConnected = (provider) => {
-    provider.request({method:'eth_accounts'}).then(a=>{
-      if(a.length){
-        wallet=a[0];
-        window._activeProvider = provider;
-        const btn=document.getElementById('walletBtn');
-        btn.textContent='[ '+wallet.slice(0,6)+'...'+wallet.slice(-4)+' ]';
-        btn.classList.add('connected');
-        loadLb();
-      }
-    }).catch(()=>{});
-  };
-
-  // Check EIP-6963 providers first
-  setTimeout(()=>{
-    if(detectedProviders.size>0){
-      detectedProviders.forEach(({provider})=>checkConnected(provider));
-    } else if(window.ethereum){
-      checkConnected(window.ethereum);
-    }
-  },200);
+window.addEventListener('DOMContentLoaded', () => {
+  getGuestId(); // generate guest session
+  loadLb();
 });
 </script>
 </body>
