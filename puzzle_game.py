@@ -624,10 +624,10 @@ class GenLayerRiddleChallenge(gl.Contract):
             # Validate required fields
             for field in ["riddle", "options", "letter", "answer"]:
                 if field not in riddle_data:
-                    return json.dumps({"status": "error", "message": "AI returned incomplete riddle. Try again."})
+                    return json.dumps({"status": "error", "message": "AI returned incomplete riddle. Try again."}, sort_keys=True)
 
             if riddle_data["letter"] not in ["A", "B", "C", "D"]:
-                return json.dumps({"status": "error", "message": "AI returned invalid letter. Try again."})
+                return json.dumps({"status": "error", "message": "AI returned invalid letter. Try again."}, sort_keys=True)
 
             riddle_data["author"]       = "AI"
             riddle_data["topic"]        = topic
@@ -651,7 +651,7 @@ class GenLayerRiddleChallenge(gl.Contract):
             return json.dumps({
                 "status":  "error",
                 "message": "Failed to parse AI riddle. Try a more specific topic."
-            })
+            }, sort_keys=True)
 
     @gl.public.write
     def get_riddle_hint(self, question_id: u256) -> str:
@@ -700,4 +700,4 @@ class GenLayerRiddleChallenge(gl.Contract):
         rooms[room_code]["active"] = "false"
         self.rooms = json.dumps(rooms, sort_keys=True)
         final = rooms[room_code]["room_scores"]
-        return "Room " + room_code + " closed. Final scores: " + json.dumps(final)
+        return "Room " + room_code + " closed. Final scores: " + json.dumps(final, sort_keys=True)
