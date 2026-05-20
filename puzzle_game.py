@@ -420,30 +420,71 @@ class GenLayerRiddleChallenge(gl.Contract):
         attempts[player] = attempts.get(player, 0) + 1
         self.attempts    = json.dumps(attempts, sort_keys=True)
 
+        # ── RICHER AI VERDICT ──────────────────────────────────────────────────
+        # AI does not just say YES/NO — it judges quality, confidence, and reasoning.
+        # 5 validators each independently run this prompt and must agree on the verdict
+        # AND have confidence scores within 25 points. This is genuine AI consensus.
         prompt = (
             "You are the judge of a GenLayer blockchain riddle game.\n"
-            "Correct answer: \"" + q["answer"] + "\" (option " + q["letter"] + ": " + q["options"][q["letter"]] + ")\n"
-            "Player answered: \"" + player_answer + "\"\n"
-            "Accept if the player chose letter " + q["letter"] + " or typed something clearly matching \"" + q["answer"] + "\".\n"
-            "Accept synonyms and partial matches that show understanding.\n"
-            "Reply with only YES or NO."
+            "Riddle: \"" + q["riddle"] + "\"\n"
+            "Correct answer: option " + q["letter"] + " = \"" + q["options"][q["letter"]] + "\" (keyword: " + q["answer"] + ")\n"
+            "Player answered: \"" + player_answer + "\"\n\n"
+            "Evaluate the player's answer and respond ONLY with valid JSON:\n"
+            "{\"verdict\":\"CORRECT\" or \"WRONG\","
+            "\"confidence\":0-100,"
+            "\"reasoning\":\"one sentence explaining your judgment\"}\n\n"
+            "Rules:\n"
+            "- CORRECT if: player chose letter " + q["letter"] + ", OR text clearly matches \"" + q["answer"] + "\", OR is a valid synonym.\n"
+            "- WRONG if: wrong letter, unrelated answer, or gibberish.\n"
+            "- confidence: how certain you are (100 = certain, 50 = borderline)\n"
+            "- Respond ONLY with the JSON. No markdown, no extra text."
         )
 
         def get_verdict():
             return gl.nondet.exec_prompt(prompt)
 
-        verdict = gl.eq_principle.prompt_comparative(get_verdict, "The verdict must be YES or NO")
+        result = gl.eq_principle.prompt_comparative(
+            get_verdict,
+            "Two verdicts are equivalent if: (1) the 'verdict' field is identical "
+            "(both say CORRECT or both say WRONG), AND (2) confidence scores are within 25 points. "
+            "The reasoning text may differ in wording."
+        )
 
-        if "YES" in verdict.upper():
+        # Parse the richer verdict
+        try:
+            clean = result.strip().strip('`').strip()
+            if clean.lower().startswith('json'): clean = clean[4:].strip()
+            verdict_data = json.loads(clean)
+            is_correct   = verdict_data.get("verdict", "").upper() == "CORRECT"
+            confidence   = verdict_data.get("confidence", 0)
+            reasoning    = verdict_data.get("reasoning", "")
+        except Exception:
+            # Fallback to simple YES/NO parse if JSON fails
+            is_correct = "CORRECT" in result.upper() or "YES" in result.upper()
+            confidence = 80
+            reasoning  = ""
+
+        if is_correct:
             scores         = json.loads(self.scores)
             scores[player] = scores.get(player, 0) + 1
             self.scores    = json.dumps(scores, sort_keys=True)
             total = scores[player]
-            if total >= 5:
-                return "LEGENDARY! Score: " + str(total) + " | Correct: " + q["letter"] + ". " + q["options"][q["letter"]]
-            return "Correct! Score: " + str(total) + " | Answer: " + q["letter"] + ". " + q["options"][q["letter"]]
+            msg = "CORRECT"
+            if total >= 5: msg = "LEGENDARY"
+            return json.dumps({
+                "result":    msg,
+                "score":     total,
+                "answer":    q["letter"] + ". " + q["options"][q["letter"]],
+                "confidence": confidence,
+                "reasoning": reasoning
+            }, sort_keys=True)
         else:
-            return "Wrong! Correct answer: " + q["letter"] + ". " + q["options"][q["letter"]] + " — Try the next riddle!"
+            return json.dumps({
+                "result":     "WRONG",
+                "answer":     q["letter"] + ". " + q["options"][q["letter"]],
+                "confidence": confidence,
+                "reasoning":  reasoning
+            }, sort_keys=True)
 
     @gl.public.write
     def submit_room_answer(self, player: str, room_code: str, question_id: u256, player_answer: str) -> str:
@@ -468,19 +509,43 @@ class GenLayerRiddleChallenge(gl.Contract):
 
         prompt = (
             "You are the judge of a GenLayer blockchain riddle game.\n"
-            "Correct answer: \"" + q["answer"] + "\" (option " + q["letter"] + ": " + q["options"][q["letter"]] + ")\n"
-            "Player answered: \"" + player_answer + "\"\n"
-            "Accept if the player chose letter " + q["letter"] + " or typed something clearly matching \"" + q["answer"] + "\".\n"
-            "Accept synonyms and partial matches that show understanding.\n"
-            "Reply with only YES or NO."
+            "Riddle: \"" + q["riddle"] + "\"\n"
+            "Correct answer: option " + q["letter"] + " = \"" + q["options"][q["letter"]] + "\" (keyword: " + q["answer"] + ")\n"
+            "Player answered: \"" + player_answer + "\"\n\n"
+            "Evaluate the player's answer and respond ONLY with valid JSON:\n"
+            "{\"verdict\":\"CORRECT\" or \"WRONG\","
+            "\"confidence\":0-100,"
+            "\"reasoning\":\"one sentence explaining your judgment\"}\n\n"
+            "Rules:\n"
+            "- CORRECT if: player chose letter " + q["letter"] + ", OR text clearly matches \"" + q["answer"] + "\", OR is a valid synonym.\n"
+            "- WRONG if: wrong letter, unrelated answer, or gibberish.\n"
+            "- confidence: how certain you are (100 = certain, 50 = borderline)\n"
+            "- Respond ONLY with the JSON. No markdown, no extra text."
         )
 
         def get_verdict():
             return gl.nondet.exec_prompt(prompt)
 
-        verdict = gl.eq_principle.prompt_comparative(get_verdict, "The verdict must be YES or NO")
+        result = gl.eq_principle.prompt_comparative(
+            get_verdict,
+            "Two verdicts are equivalent if: (1) the 'verdict' field is identical "
+            "(both say CORRECT or both say WRONG), AND (2) confidence scores are within 25 points. "
+            "The reasoning text may differ in wording."
+        )
 
-        if "YES" in verdict.upper():
+        try:
+            clean = result.strip().strip('`').strip()
+            if clean.lower().startswith('json'): clean = clean[4:].strip()
+            verdict_data = json.loads(clean)
+            is_correct   = verdict_data.get("verdict", "").upper() == "CORRECT"
+            confidence   = verdict_data.get("confidence", 0)
+            reasoning    = verdict_data.get("reasoning", "")
+        except Exception:
+            is_correct = "CORRECT" in result.upper() or "YES" in result.upper()
+            confidence = 80
+            reasoning  = ""
+
+        if is_correct:
             scores         = json.loads(self.scores)
             scores[player] = scores.get(player, 0) + 1
             self.scores    = json.dumps(scores, sort_keys=True)
@@ -488,15 +553,141 @@ class GenLayerRiddleChallenge(gl.Contract):
             rooms[room_code] = room
             self.rooms       = json.dumps(rooms, sort_keys=True)
             room_score = room["room_scores"][player]
-            if room_score >= 5:
-                return "LEGENDARY in room " + room_code + "! Score: 5/5 | Answer: " + q["letter"] + ". " + q["options"][q["letter"]]
-            return (
-                "Correct in room " + room_code + "! "
-                + "Room score: " + str(room_score) + "/5 | "
-                + "Answer: " + q["letter"] + ". " + q["options"][q["letter"]]
-            )
+            msg = "LEGENDARY" if room_score >= 5 else "CORRECT"
+            return json.dumps({
+                "result":     msg,
+                "room_score": room_score,
+                "answer":     q["letter"] + ". " + q["options"][q["letter"]],
+                "confidence": confidence,
+                "reasoning":  reasoning
+            }, sort_keys=True)
         else:
-            return "Wrong! Correct answer: " + q["letter"] + ". " + q["options"][q["letter"]] + " — Try your next riddle!"
+            return json.dumps({
+                "result":     "WRONG",
+                "answer":     q["letter"] + ". " + q["options"][q["letter"]],
+                "confidence": confidence,
+                "reasoning":  reasoning
+            }, sort_keys=True)
+
+    @gl.public.write
+    def generate_ai_riddle(self, requester: str, topic: str) -> str:
+        """
+        ── CORE AI MECHANIC ──────────────────────────────────────────────────────
+        AI generates a brand-new GenLayer riddle on any topic.
+        5 validators independently generate a riddle and must reach consensus
+        that their riddles test the same knowledge and have the same correct answer.
+        This is IMPOSSIBLE without GenLayer AI + Optimistic Democracy consensus.
+        Generated riddles are stored on-chain permanently and enter the game pool.
+        ─────────────────────────────────────────────────────────────────────────
+        """
+        assert len(topic.strip()) >= 3, "Topic must be at least 3 characters."
+        assert len(topic) <= 100, "Topic too long. Keep it under 100 characters."
+
+        def generate() -> str:
+            prompt = (
+                "You are creating a riddle for a GenLayer blockchain knowledge game.\n"
+                "Topic to test: \"" + topic + "\"\n\n"
+                "Create ONE riddle in this EXACT JSON format (no markdown, no extra text):\n"
+                "{\"riddle\":\"...the riddle text as a puzzle or question...\","
+                "\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},"
+                "\"letter\":\"A or B or C or D\","
+                "\"answer\":\"...correct answer text in lowercase...\","
+                "\"explanation\":\"...one sentence why this is correct...\"}\n\n"
+                "Requirements:\n"
+                "- The riddle MUST test knowledge about: " + topic + "\n"
+                "- Exactly ONE option must be correct. Label it with the 'letter' field.\n"
+                "- The other three options must be plausible but wrong.\n"
+                "- The riddle must be solvable by someone with GenLayer knowledge.\n"
+                "- Respond ONLY with the JSON object. No extra text."
+            )
+            return gl.nondet.exec_prompt(prompt)
+
+        result = gl.eq_principle.prompt_comparative(
+            generate,
+            "Two AI-generated riddles about \"" + topic + "\" are equivalent if: "
+            "(1) both test knowledge of " + topic + ", "
+            "(2) the same letter (A/B/C/D) is marked as correct in both, "
+            "(3) all four options A, B, C, D are present, "
+            "(4) the answer fields refer to the same concept. "
+            "Differences in exact wording of the riddle text or options are acceptable."
+        )
+
+        try:
+            clean = result.strip()
+            # Strip markdown code fences if present
+            if "```" in clean:
+                clean = clean.split("```")[1]
+                if clean.startswith("json"): clean = clean[4:]
+            clean = clean.strip()
+            riddle_data = json.loads(clean)
+
+            # Validate required fields
+            for field in ["riddle", "options", "letter", "answer"]:
+                if field not in riddle_data:
+                    return json.dumps({"status": "error", "message": "AI returned incomplete riddle. Try again."})
+
+            if riddle_data["letter"] not in ["A", "B", "C", "D"]:
+                return json.dumps({"status": "error", "message": "AI returned invalid letter. Try again."})
+
+            riddle_data["author"]       = "AI"
+            riddle_data["topic"]        = topic
+            riddle_data["generated_by"] = requester
+
+            custom = json.loads(self.custom_riddles)
+            custom.append(riddle_data)
+            self.custom_riddles = json.dumps(custom, sort_keys=True)
+
+            new_id = len(QUESTIONS) + len(custom) - 1
+            return json.dumps({
+                "status":  "generated",
+                "id":      new_id,
+                "topic":   topic,
+                "riddle":  riddle_data["riddle"],
+                "options": riddle_data["options"],
+                "message": "AI-generated riddle stored on-chain permanently. ID: " + str(new_id)
+            }, sort_keys=True)
+
+        except Exception:
+            return json.dumps({
+                "status":  "error",
+                "message": "Failed to parse AI riddle. Try a more specific topic."
+            })
+
+    @gl.public.write
+    def get_riddle_hint(self, question_id: u256) -> str:
+        """
+        AI generates a personalised hint for any riddle.
+        Each of 5 validators independently generates a hint — consensus ensures
+        the hint is helpful without giving away the answer directly.
+        """
+        custom = json.loads(self.custom_riddles)
+        all_q  = _all_questions(custom)
+        i      = int(question_id)
+        if i >= len(all_q):
+            return "Invalid question ID."
+        q = all_q[i]
+
+        def generate_hint() -> str:
+            prompt = (
+                "You are a helpful hint-giver in a GenLayer blockchain riddle game.\n"
+                "The riddle is: \"" + q["riddle"] + "\"\n"
+                "Options: A=" + q["options"]["A"] + ", B=" + q["options"]["B"]
+                + ", C=" + q["options"]["C"] + ", D=" + q["options"]["D"] + "\n\n"
+                "Give ONE helpful hint that guides the player toward the correct answer "
+                "WITHOUT revealing the answer letter or the answer text directly.\n"
+                "Reference GenLayer concepts in your hint to help narrow it down.\n"
+                "Keep it to 1-2 sentences maximum.\n"
+                "Do NOT say the answer letter. Do NOT say the answer text."
+            )
+            return gl.nondet.exec_prompt(prompt)
+
+        hint = gl.eq_principle.prompt_comparative(
+            generate_hint,
+            "Two hints are equivalent if they guide toward the same answer without "
+            "revealing it directly, and reference similar GenLayer concepts. "
+            "Exact wording may differ between validators."
+        )
+        return "HINT: " + hint.strip()
 
     @gl.public.write
     def close_room(self, host: str, room_code: str) -> str:
