@@ -415,12 +415,7 @@ footer{
     <div class="title-sub">AI-JUDGED · ON-CHAIN · MULTIPLAYER<span class="blink">_</span></div>
   </div>
 
-  <div class="stats-grid" style="margin-top:12px;">
-    <div class="stat-box pbox"><div class="stat-num" id="totalQ">15</div><div class="stat-lbl">QUESTIONS</div></div>
-    <div class="stat-box pbox"><div class="stat-num">∞</div><div class="stat-lbl">PLAYERS</div></div>
-    <div class="stat-box pbox"><div class="stat-num" style="color:#22c55e">AI</div><div class="stat-lbl">JUDGE</div></div>
-    <div class="stat-box pbox"><div class="stat-num" style="color:#facc15">100%</div><div class="stat-lbl">ON-CHAIN</div></div>
-  </div>
+
 
   <div style="font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.5vw,7px);color:#22d3ee;text-align:center;margin:16px 0 8px;letter-spacing:0.2em;">▶ SELECT MODE</div>
   <div class="mode-grid">
@@ -446,10 +441,7 @@ footer{
     </div>
   </div>
 
-  <div class="sec-hdr">🏆 HALL OF FAME</div>
-  <div class="pbox" id="lbBox">
-    <div class="lb-row"><div class="lb-rank" style="color:#555577">-</div><div class="lb-addr">PLAY TO APPEAR ON LEADERBOARD</div><div class="lb-score">-</div></div>
-  </div>
+
 </div>
 </div>
 
@@ -626,9 +618,9 @@ footer{
 
 <script>
 const CONTRACT = "0x27Fb0B472dBFFBbcb0774b81022f6c1900BBA148";
-const RPC      = "https://studio.genlayer.com:8443/api";
+const RPC      = "https://riddlechain-proxy.vercel.app/api/genlayer";
 
-let roomCode=null;
+let roomCode=null, isHost=false;
 let soloPos=0,soloScore=0,soloSel=null,soloQid=null;
 let roomPos=0,roomScore=0,roomSel=null,roomQid=null;
 
@@ -739,24 +731,142 @@ function pick(mode,letter){
 }
 
 // ── SOLO ──
-const demoQ=[
-  {label:'YOUR SESSION | QUESTION 1 of 5  (ID:1)',riddle:'Validators argue, yet they always agree. I use AI to reach my verdict. I am democratic but optimistic. What consensus mechanism am I?',opts:{A:'Proof of Work',B:'Delegated Proof of Stake',C:'Optimistic Democracy',D:'Byzantine Fault Tolerance'},qId:1,pos:1},
-  {label:'YOUR SESSION | QUESTION 2 of 5  (ID:0)',riddle:'I am not a bank, yet I hold value. I live on a blockchain but speak plain English and think with AI. What am I?',opts:{A:'Smart Oracle',B:'Intelligent Contract',C:'Decentralized Exchange',D:'Blockchain Wallet'},qId:0,pos:2},
-  {label:'YOUR SESSION | QUESTION 3 of 5  (ID:4)',riddle:'GenLayer was once known by another name before rebranding. What was it previously called?',opts:{A:'ChainAI',B:'YeagerAI',C:'SmartLayer',D:'LayerZero'},qId:4,pos:3},
-  {label:'YOUR SESSION | QUESTION 4 of 5  (ID:8)',riddle:'I am the GenLayer function that fetches live data from any public URL. Unlike web.get() I actually return content. What am I?',opts:{A:'web.get()',B:'web.render()',C:'web.fetch()',D:'web.call()'},qId:8,pos:4},
-  {label:'YOUR SESSION | QUESTION 5 of 5  (ID:3)',riddle:'I run inside GenLayer and execute Intelligent Contracts using large language models. What am I?',opts:{A:'Ethereum VM',B:'WebAssembly',C:'Python Interpreter',D:'GenVM'},qId:3,pos:5},
-];
+// ── RIDDLE CACHE — loaded from contract on startup ──────────────────────────
+let riddleCache = [];      // riddles fetched from the chain
+let riddlesReady = false;  // true once we have riddles to play
+
+// Deterministic shuffle — same algorithm as the contract's _shuffle()
+function shuffleIndices(seedStr, total, pick){
+  let seed=0;
+  for(let c of seedStr.replace('0x','')) seed=seed*31+c.charCodeAt(0);
+  const indices=[...Array(total).keys()];
+  for(let i=indices.length-1;i>0;i--){
+    seed=(seed*1103515245+12345)&0x7fffffff;
+    const j=seed%(i+1);
+    [indices[i],indices[j]]=[indices[j],indices[i]];
+  }
+  return indices.slice(0,pick);
+}
+
+function getShuffledRiddles(seedStr){
+  if(!riddleCache.length) return null;
+  const pick = Math.min(5, riddleCache.length);
+  const order = shuffleIndices(seedStr, riddleCache.length, pick);
+  return order.map((idx, pos) => ({...riddleCache[idx], pos: pos+1,
+    label: `QUESTION ${pos+1} of 5  (ID:${riddleCache[idx].qId})`}));
+}
+
+// Load riddles from the chain on page load
+async function loadRiddlesFromChain(){
+  try {
+    // Try to get total questions count first
+    const totalRaw = await glRead('get_total_questions', []);
+    let total = 15; // default
+    if(totalRaw){
+      const m = totalRaw.match(/Total[^:]*:\s*(\d+)/);
+      if(m) total = parseInt(m[1]);
+    }
+
+    // Fetch riddles from the contract
+    const fetched = [];
+    for(let i = 0; i < Math.min(total, 15); i++){
+      const raw = await glRead('get_riddle', [i]);
+      if(raw){
+        const parsed = parseRiddle(raw);
+        if(parsed && parsed.riddle) {
+          fetched.push({...parsed, qId: i});
+        }
+      }
+    }
+
+    // Also load AI-generated custom riddles from validators
+    const customRaw = await glRead('list_custom_riddles', []);
+    if(customRaw && customRaw !== 'No custom riddles yet.'){
+      try {
+        const clean = customRaw.replace(/^"|"$/g,'').replace(/\\"/g,'"').replace(/\\n/g,'');
+        const customs = JSON.parse(clean);
+        if(Array.isArray(customs)){
+          customs.forEach((q, i) => {
+            if(q.riddle && q.options){
+              fetched.push({
+                riddle: q.riddle,
+                opts: q.options,
+                qId: 15 + i,
+                label: `AI-GENERATED BY VALIDATORS`,
+                aiGenerated: true
+              });
+            }
+          });
+        }
+      } catch(e){}
+    }
+
+    if(fetched.length > 0){
+      riddleCache = fetched;
+      riddlesReady = true;
+      console.log('Loaded', fetched.length, 'riddles from GenLayer contract');
+      return true;
+    }
+  } catch(e){
+    console.warn('Could not load riddles from chain:', e);
+  }
+  return false;
+}
+
+let playerDemoQ = null;
+let roomDemoQ   = null;
+
+
 
 async function startSolo(){
-  // No wallet required — anyone can play
   soloPos=0; soloScore=0; soloSel=null;
   resetHearts('soloHearts'); setBar('soloBar',0);
   document.getElementById('soloScoreDisp').textContent='0/5';
   document.getElementById('soloFb').className='feedback pbox';
   document.getElementById('soloTx').className='tx-status pbox';
+  document.getElementById('soloBtn').style.display='block';
   updatePlayerBadge();
   show('solo');
+
+  // If riddles not loaded yet, try loading now
+  if(!riddlesReady){
+    document.getElementById('soloBox').innerHTML=
+      '<div style="text-align:center;padding:20px;font-family:VT323,monospace;font-size:16px;color:#facc15;">'+
+      'LOADING RIDDLES FROM GENLAYER VALIDATORS...<span class="blink">_</span></div>';
+    const loaded = await loadRiddlesFromChain();
+    if(!loaded){
+      showNoChainMessage('soloBox');
+      return;
+    }
+  }
+  // Shuffle riddles uniquely per player
+  playerDemoQ = getShuffledRiddles(getPlayer());
+  if(!playerDemoQ){ showNoChainMessage('soloBox'); return; }
   loadSoloQ();
+}
+
+function showNoChainMessage(boxId){
+  document.getElementById(boxId).innerHTML=`
+    <div style="text-align:center;padding:24px 16px;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#facc15;margin-bottom:12px;text-shadow:1px 1px 0 #000;">
+        ⚡ POWERED BY GENLAYER VALIDATORS
+      </div>
+      <div style="font-family:VT323,monospace;font-size:15px;color:#555577;line-height:1.8;margin-bottom:16px;">
+        RIDDLES ARE GENERATED AND JUDGED BY GENLAYER AI VALIDATORS.<br>
+        THE CONTRACT CANNOT BE REACHED FROM THIS BROWSER DIRECTLY.<br><br>
+        TO PLAY WITH LIVE VALIDATOR-GENERATED RIDDLES:
+      </div>
+      <a href="https://studio.genlayer.com" target="_blank"
+         style="font-family:'Press Start 2P',monospace;font-size:7px;color:#fff;
+                background:#6c2bd9;border:3px solid #a855f7;padding:12px 20px;
+                box-shadow:4px 4px 0 #000;text-decoration:none;display:inline-block;">
+        ▶ OPEN GENLAYER STUDIO
+      </a>
+      <div style="font-family:VT323,monospace;font-size:12px;color:#333;margin-top:10px;">
+        CONTRACT: 0x27Fb0B472dBFFBbcb0774b81022f6c1900BBA148
+      </div>
+    </div>`;
+  document.getElementById(soloPos !== undefined ? 'soloBtn' : 'roomBtn').style.display='none';
 }
 
 async function loadSoloQ(){
@@ -768,7 +878,7 @@ async function loadSoloQ(){
   soloSel=null;
   const player=getPlayer();
   const raw=await glRead('get_my_riddle',[player,soloPos]);
-  const p=raw?parse(raw):demoQ[soloPos%demoQ.length];
+  const p=raw?parse(raw):(playerDemoQ?playerDemoQ[soloPos]:null);
   if(p){soloQid=p.qId;renderQ(p,'soloBox','solo');}
 }
 
@@ -809,6 +919,7 @@ function createRoom(){
     const w    = getPlayer();
     const code = genCode(w);
     roomCode   = code;
+    isHost     = true;
     document.getElementById('displayCode').textContent = code;
     document.getElementById('createdSection').style.display = 'block';
     document.getElementById('createBtn').style.display = 'none';
@@ -820,9 +931,7 @@ function createRoom(){
         <div class="badge you">YOU</div>
       </div>`;
     glWrite('create_room', [w]);
-  } catch(e) {
-    console.error('createRoom error:', e);
-  }
+  } catch(e) { console.error('createRoom error:', e); }
 }
 
 function copyCode(){
@@ -836,26 +945,40 @@ function joinRoom(){
   const c = document.getElementById('joinCode').value.trim().toUpperCase();
   if(!c){ alert('ENTER THE ROOM CODE.'); return; }
   roomCode = c;
+  isHost   = false;
   try {
     const w = getPlayer();
     glWrite('join_room', [w, c]);
     document.getElementById('joinedSection').style.display = 'block';
     document.getElementById('joinedMsg').innerHTML =
       '<div class="fb-title">✓ JOINED ROOM ' + c + '</div>' +
-      '<div class="fb-text">READY TO PLAY!</div>';
+      '<div class="fb-text">YOU ARE IN! THE HOST WILL START THE GAME.<br>WHEN READY, PRESS START BELOW.</div>';
   } catch(e) { console.error(e); }
 }
 
-function goPlay(){
+async function goPlay(){
   if(!roomCode){alert('No room code.');return;}
   roomPos=0;roomScore=0;roomSel=null;
   resetHearts('roomHearts');setBar('roomBar',0);
   document.getElementById('roomScoreDisp').textContent='0/5';
-  document.getElementById('roomTitle').textContent='ROOM GAME';
+  document.getElementById('roomTitle').textContent='ROOM: '+roomCode;
   document.getElementById('roomTag').textContent=roomCode;
   document.getElementById('roomFb').className='feedback pbox';
   document.getElementById('roomTx').className='tx-status pbox';
-  show('room-game');loadRoomQ();
+  document.getElementById('roomBtn').style.display='block';
+  show('room-game');
+
+  if(!riddlesReady){
+    document.getElementById('roomBox').innerHTML=
+      '<div style="text-align:center;padding:20px;font-family:VT323,monospace;font-size:16px;color:#facc15;">'+
+      'LOADING RIDDLES FROM GENLAYER VALIDATORS...<span class="blink">_</span></div>';
+    const loaded = await loadRiddlesFromChain();
+    if(!loaded){ showNoChainMessage('roomBox'); return; }
+  }
+  // Seed by player+roomCode so same player gets different riddles in different rooms
+  roomDemoQ = getShuffledRiddles(getPlayer()+roomCode);
+  if(!roomDemoQ){ showNoChainMessage('roomBox'); return; }
+  loadRoomQ();
 }
 
 // ── ROOM GAME ──
@@ -865,9 +988,8 @@ async function loadRoomQ(){
   document.getElementById('roomBtn').disabled=true;
   document.getElementById('roomFb').className='feedback pbox';
   roomSel=null;
-  const raw=await glRead('get_room_riddle',[wallet,roomCode,roomPos]);
-  const demo={label:`ROOM ${roomCode} | QUESTION ${roomPos+1} of 5  (ID:3)`,riddle:'I run inside GenLayer. I execute Intelligent Contracts using large language models. What am I?',opts:{A:'Ethereum VM',B:'WebAssembly',C:'Python',D:'GenVM'},qId:3,pos:roomPos+1};
-  const p=raw?parse(raw):demo;
+  const raw=await glRead('get_room_riddle',[getPlayer(),roomCode,roomPos]);
+  const demo=roomDemoQ?roomDemoQ[roomPos]:null;  const p=raw?parse(raw):demo;
   if(p){roomQid=p.qId;renderQ(p,'roomBox','room');}
   loadRoomLb();
 }
@@ -878,7 +1000,7 @@ async function submitRoom(){
   document.querySelectorAll('#roomBox .opt-btn').forEach(b=>b.style.pointerEvents='none');
   const tx=document.getElementById('roomTx');
   tx.className='tx-status pbox pending';
-  await glWrite('submit_room_answer',[wallet,roomCode,roomQid,roomSel]);
+  await glWrite('submit_room_answer',[getPlayer(),roomCode,roomQid,roomSel]);
   setTimeout(()=>{
     tx.className='tx-status pbox';
     const ok=Math.random()>0.3;
@@ -908,7 +1030,7 @@ async function loadRoomLb(){
   document.getElementById('roomLb').innerHTML=`
     <div class="lb-row">
       <div class="lb-rank r1">1</div>
-      <div class="lb-addr">${wallet?wallet.slice(0,14)+'...':'YOU'}</div>
+      <div class="lb-addr">${getPlayer().slice(0,14)}...</div>
       <div class="lb-score">${roomScore} PTS</div>
     </div>`;
 }
@@ -933,32 +1055,6 @@ async function addRiddle(){
     document.getElementById('crSuccess').style.display='block';
     document.getElementById('crSuccessMsg').textContent='RIDDLE ADDED! CREATE A CUSTOM ROOM TO CHALLENGE FRIENDS.';
   },2000);
-}
-
-// ── LEADERBOARD ──
-async function loadLb(){
-  const lb = document.getElementById('lbBox');
-  lb.innerHTML = '<div style="padding:12px;font-family:VT323,monospace;font-size:14px;color:#555577;text-align:center;">LOADING...</div>';
-  const raw = await glRead('get_all_scores', []);
-  if (raw) {
-    try {
-      const clean = raw.replace(/^"|"$/g, '').replace(/\\"/g, '"').replace(/\\n/g, '');
-      const data = JSON.parse(clean);
-      if (!data || data.length === 0) {
-        lb.innerHTML = '<div style="padding:14px;font-family:VT323,monospace;font-size:15px;color:#555577;text-align:center;">NO PLAYERS YET — BE THE FIRST!</div>';
-        return;
-      }
-      lb.innerHTML = data.slice(0, 5).map((p, i) => `
-        <div class="lb-row">
-          <div class="lb-rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div>
-          <div class="lb-addr">${p.player ? p.player.slice(0,10)+'...'+p.player.slice(-6) : '???'}</div>
-          <div class="lb-score">${p.score||0} PTS</div>
-        </div>`).join('');
-      return;
-    } catch(e) { console.error('LB parse error:', e); }
-  }
-  // If read fails — show honest empty state
-  lb.innerHTML = '<div style="padding:14px;font-family:VT323,monospace;font-size:15px;color:#555577;text-align:center;">NO PLAYERS YET — BE THE FIRST!</div>';
 }
 
 // ── HELPERS ──
@@ -991,8 +1087,15 @@ function genCode(addr){
 
 // ── INIT ──
 window.addEventListener('DOMContentLoaded', () => {
-  getGuestId(); // generate guest session
-  loadLb();
+  getGuestId();
+  // Try to load riddles from GenLayer contract on startup
+  loadRiddlesFromChain().then(loaded => {
+    if(loaded){
+      console.log('✅ Riddles loaded from GenLayer chain');
+    } else {
+      console.warn('⚠️ Could not reach GenLayer chain — play via Studio');
+    }
+  });
 });
 </script>
 </body>
